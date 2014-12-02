@@ -35,14 +35,14 @@ void USART1_Configuration(void)
 
     /* USARTx configuration ------------------------------------------------------*/
     /* USARTx configured as follow:
-     *  - BaudRate = 9600 baud
+     *  - BaudRate = 115200 baud
      *  - Word Length = 8 Bits
      *  - One Stop Bit
      *  - No parity
      *  - Hardware flow control disabled (RTS and CTS signals)
      *  - Receive and transmit enabled
      */
-    USART_InitStructure.USART_BaudRate = 9600;
+    USART_InitStructure.USART_BaudRate = 115200;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
     USART_InitStructure.USART_StopBits = USART_StopBits_1;
     USART_InitStructure.USART_Parity = USART_Parity_No;
@@ -70,6 +70,8 @@ void enable_rs232_interrupts(void)
     /* Enable the USART1 IRQ in the NVIC module (so that the USART1 interrupt
      * handler is enabled). */
     NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 6;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
