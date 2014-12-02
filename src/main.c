@@ -1,5 +1,3 @@
-#define USE_STDPERIPH_DRIVER
-
 #include "stm32_init.h"
 
 /* Scheduler includes. */
@@ -171,7 +169,7 @@ int main()
 	            (signed portCHAR *) "CLI",
 	            512 /* stack size */, NULL, tskIDLE_PRIORITY + 2, NULL);
 
-#if 1
+#if 0
 	/* Create a task to record system log. */
 	xTaskCreate(system_logger,
 	            (signed portCHAR *) "Logger",
