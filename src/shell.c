@@ -172,14 +172,15 @@ void test_command(int n, char *argv[]) {
     uint32_t total, free;
     		//Mount drive
     if (f_mount(&FatFs, "", 1) == FR_OK) {
-        
+        fio_printf(1, "mount ok");
         //Try to open file
         if (f_open(&fil, "1stfile.txt", FA_OPEN_ALWAYS | FA_READ | FA_WRITE) == FR_OK) {
-            
+            fio_printf(1, "open file ok");
             //If we put more than 0 characters (everything OK)
             if (f_puts("First string in my file\n", &fil) > 0) {
                 if (TM_FATFS_DriveSize(&total, &free) == FR_OK) {
                     //Data for drive size are valid
+                    fio_printf(1, "puts ok")
                 }
                 
             }
