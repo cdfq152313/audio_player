@@ -1,5 +1,6 @@
 #include "defines.h"
 #include "tm_stm32f4_delay.h"
+#include "tm_stm32f4_spi.h"
 #include "tm_stm32f4_fatfs.h"
 #include <stdio.h>
 #include <string.h>
@@ -167,11 +168,10 @@ int main()
     //Initialize system
     SystemInit();
     //Initialize delays
-    TM_DELAY_Init();
+    //TM_DELAY_Init();
 	
 	//Mount drive
     if (f_mount(&FatFs, "", 1) == FR_OK) {
-        //Mounted OK, turn on RED LED
         
         //Try to open file
         if (f_open(&fil, "1stfile.txt", FA_OPEN_ALWAYS | FA_READ | FA_WRITE) == FR_OK) {

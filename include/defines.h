@@ -30,5 +30,14 @@
 
 /* Put your global defines for all libraries here used in your project */
 //Use custom get_fattime() function
-#define FATFS_CUSTOM_FATTIME   
+//#define FATFS_CUSTOM_FATTIME
+#define FATFS_USE_USB 0
+#define FATFS_USE_SDIO 0
+#define FATFS_CUSTOM_FATTIME 1
+//Select your SPI settings
+#define FATFS_SPI SPI1
+#define FATFS_SPI_PINSPACK        TM_SPI_PinsPack_1
+#define FATFS_CS_RCC        RCC_AHB1Periph_GPIOB            
+#define FATFS_CS_PORT        GPIOB
+#define FATFS_CS_PIN        GPIO_Pin_5
 #endif

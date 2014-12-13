@@ -57,7 +57,7 @@ CFLAGS += -D"assert_param(expr)=((void)0)"
 #My restart
 OBJS += \
       $(PWD)/src/main.o \
-      $(PWD)/CORTEX_M4F_STM32F4/startup/system_stm32f4xx.o 
+      $(PWD)/CORTEX_M4F_STM32F4/startup/system_stm32f4xx.o
       #$(PWD)/CORTEX_M4F_STM32F4/stm32f4xx_it.o \
 
 OBJS += \
@@ -84,6 +84,7 @@ OBJS += \
     $(PWD)/CORTEX_M4F_STM32F4/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_ltdc.o \
     $(PWD)/CORTEX_M4F_STM32F4/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_fmc.o \
     $(PWD)/CORTEX_M4F_STM32F4/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_rng.o \
+    $(PWD)/CORTEX_M4F_STM32F4/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_tim.o \
     $(PWD)/Utilities/STM32F429I-Discovery/stm32f429i_discovery.o \
     $(PWD)/Utilities/STM32F429I-Discovery/stm32f429i_discovery_sdram.o \
     $(PWD)/Utilities/STM32F429I-Discovery/stm32f429i_discovery_lcd.o \
@@ -103,9 +104,12 @@ OBJS += \
     $(PWD)/src/shell.o \
     $(PWD)/src/diskio.o \
     $(PWD)/src/ff.o \
-    $(PWD)/src/tm_stm32f4_delay.o \
     $(PWD)/src/tm_stm32f4_fatfs.o \
-    $(PWD)/src/tm_stm32f4timer_properties.o
+    $(PWD)/src/fatfs_sd.o \
+    $(PWD)/src/syscall.o \
+    $(PWD)/src/unicode.o \
+    $(PWD)/src/tm_stm32f4_spi.o \
+    $(PWD)/src/tm_stm32f4_delay.o
 
 CFLAGS += -I $(PWD)/include
 

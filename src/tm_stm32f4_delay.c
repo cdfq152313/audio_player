@@ -34,7 +34,7 @@ void TM_DELAY_TIM_IRQ_HANDLER(void) {
 #elif defined(KEIL_IDE)
 void TimingDelay_Decrement(void) {
 #else
-void SysTick_Handler(void) {
+void SysTick_Handler_2(void) {
 #endif
 	TM_Time++;
 	if (TM_Time2 != 0x00) {
