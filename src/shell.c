@@ -9,6 +9,13 @@
 #include "task.h"
 #include "host.h"
 
+#include "defines.h"
+#include "tm_stm32f4_delay.h"
+#include "tm_stm32f4_spi.h"
+#include "tm_stm32f4_fatfs.h"
+#include <stdio.h>
+#include <string.h>
+
 typedef struct {
 	const char *name;
 	cmdfunc *fptr;
@@ -158,26 +165,32 @@ void help_command(int n,char *argv[]){
 }
 
 void test_command(int n, char *argv[]) {
-    int handle;
-    int error;
-
-    fio_printf(1, "\r\n");
-
-    handle = host_action(SYS_OPEN, "output/syslog", 8);
-    if(handle == -1) {
-        fio_printf(1, "Open file error!\n\r");
-        return;
+	FATFS FatFs;
+    //File object
+    FIL fil;
+    //Free and total space
+    uint32_t total, free;
+    		//Mount drive
+    if (f_mount(&FatFs, "", 1) == FR_OK) {
+        
+        //Try to open file
+        if (f_open(&fil, "1stfile.txt", FA_OPEN_ALWAYS | FA_READ | FA_WRITE) == FR_OK) {
+            
+            //If we put more than 0 characters (everything OK)
+            if (f_puts("First string in my file\n", &fil) > 0) {
+                if (TM_FATFS_DriveSize(&total, &free) == FR_OK) {
+                    //Data for drive size are valid
+                }
+                
+            }
+            
+            //Close file, don't forget this!
+            f_close(&fil);
+        }
+        
+        //Unmount drive, don't forget this!
+        f_mount(0, "", 1);
     }
-
-    char *buffer = "Test host_write function which can write data to output/syslog\n";
-    error = host_action(SYS_WRITE, handle, (void *)buffer, strlen(buffer));
-    if(error != 0) {
-        fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error);
-        host_action(SYS_CLOSE, handle);
-        return;
-    }
-
-    host_action(SYS_CLOSE, handle);
 }
 
 cmdfunc *do_command(const char *cmd){
