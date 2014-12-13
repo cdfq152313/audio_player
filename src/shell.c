@@ -168,10 +168,13 @@ void test_command(int n, char *argv[]) {
 	FATFS FatFs;
     //File object
     FIL fil;
+    fio_printf(1, "test ok");
     //Free and total space
     uint32_t total, free;
     		//Mount drive
-    if (f_mount(&FatFs, "", 1) == FR_OK) {
+    int i = f_mount(&FatFs, "/", 1);
+    fio_printf(1, "%d", i);
+    if (i == FR_OK) {
         fio_printf(1, "mount ok");
         //Try to open file
         if (f_open(&fil, "1stfile.txt", FA_OPEN_ALWAYS | FA_READ | FA_WRITE) == FR_OK) {
@@ -180,18 +183,20 @@ void test_command(int n, char *argv[]) {
             if (f_puts("First string in my file\n", &fil) > 0) {
                 if (TM_FATFS_DriveSize(&total, &free) == FR_OK) {
                     //Data for drive size are valid
-                    fio_printf(1, "puts ok")
+                    fio_printf(1, "puts ok");
+
                 }
-                
+                fio_printf(1, "puts ok2");
             }
-            
+            fio_printf(1, "open file ok2");
             //Close file, don't forget this!
             f_close(&fil);
         }
-        
+        fio_printf(1, "mount ok2");
         //Unmount drive, don't forget this!
         f_mount(0, "", 1);
     }
+    fio_printf(1, "test ok");
 }
 
 cmdfunc *do_command(const char *cmd){
