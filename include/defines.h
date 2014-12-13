@@ -31,6 +31,10 @@
 /* Put your global defines for all libraries here used in your project */
 //Use custom get_fattime() function
 //#define FATFS_CUSTOM_FATTIME
+//Use detect pin
+#define FATFS_USE_DETECT_PIN            1
+//Use writeprotect pin
+#define FATFS_USE_WRITEPROTECT_PIN        1
 #define FATFS_USE_USB 0
 #define FATFS_USE_SDIO 0
 #define FATFS_CUSTOM_FATTIME 1
