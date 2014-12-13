@@ -168,35 +168,35 @@ void test_command(int n, char *argv[]) {
 	FATFS FatFs;
     //File object
     FIL fil;
-    fio_printf(1, "test ok");
+    fio_printf(1, "test ok\r\n");
     //Free and total space
     uint32_t total, free;
     		//Mount drive
-    int i = f_mount(&FatFs, "/", 1);
-    fio_printf(1, "%d", i);
+    int i = f_mount(&FatFs, "", 1);
+    fio_printf(1, "%X\r\n", i);
     if (i == FR_OK) {
-        fio_printf(1, "mount ok");
+        fio_printf(1, "mount ok\r\n");
         //Try to open file
         if (f_open(&fil, "1stfile.txt", FA_OPEN_ALWAYS | FA_READ | FA_WRITE) == FR_OK) {
-            fio_printf(1, "open file ok");
+            fio_printf(1, "open file ok\r\n");
             //If we put more than 0 characters (everything OK)
             if (f_puts("First string in my file\n", &fil) > 0) {
                 if (TM_FATFS_DriveSize(&total, &free) == FR_OK) {
                     //Data for drive size are valid
-                    fio_printf(1, "puts ok");
+                    fio_printf(1, "puts ok\r\n");
 
                 }
-                fio_printf(1, "puts ok2");
+                fio_printf(1, "puts ok2\r\n");
             }
-            fio_printf(1, "open file ok2");
+            fio_printf(1, "open file ok2\r\n");
             //Close file, don't forget this!
             f_close(&fil);
         }
-        fio_printf(1, "mount ok2");
+        fio_printf(1, "mount ok2\r\n");
         //Unmount drive, don't forget this!
         f_mount(0, "", 1);
     }
-    fio_printf(1, "test ok");
+    fio_printf(1, "test ok\r\n");
 }
 
 cmdfunc *do_command(const char *cmd){
