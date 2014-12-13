@@ -168,29 +168,9 @@ int main()
     //Initialize system
     SystemInit();
     //Initialize delays
-    //TM_DELAY_Init();
+    TM_DELAY_Init();
 	
-	//Mount drive
-    if (f_mount(&FatFs, "", 1) == FR_OK) {
-        
-        //Try to open file
-        if (f_open(&fil, "1stfile.txt", FA_OPEN_ALWAYS | FA_READ | FA_WRITE) == FR_OK) {
-            
-            //If we put more than 0 characters (everything OK)
-            if (f_puts("First string in my file\n", &fil) > 0) {
-                if (TM_FATFS_DriveSize(&total, &free) == FR_OK) {
-                    //Data for drive size are valid
-                }
-                
-            }
-            
-            //Close file, don't forget this!
-            f_close(&fil);
-        }
-        
-        //Unmount drive, don't forget this!
-        f_mount(0, "", 1);
-    }
+
 
 	/* Create the queue used by the serial task.  Messages for write to
 	 * the RS232. */
@@ -213,6 +193,28 @@ int main()
 
 	/* Start running the tasks. */
 	vTaskStartScheduler();
+
+		//Mount drive
+    if (f_mount(&FatFs, "", 1) == FR_OK) {
+        
+        //Try to open file
+        if (f_open(&fil, "1stfile.txt", FA_OPEN_ALWAYS | FA_READ | FA_WRITE) == FR_OK) {
+            
+            //If we put more than 0 characters (everything OK)
+            if (f_puts("First string in my file\n", &fil) > 0) {
+                if (TM_FATFS_DriveSize(&total, &free) == FR_OK) {
+                    //Data for drive size are valid
+                }
+                
+            }
+            
+            //Close file, don't forget this!
+            f_close(&fil);
+        }
+        
+        //Unmount drive, don't forget this!
+        f_mount(0, "", 1);
+    }
 
 	return 0;
 }
