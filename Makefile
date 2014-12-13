@@ -100,7 +100,12 @@ OBJS += \
     $(PWD)/src/filesystem.o \
     $(PWD)/src/hash-djb2.o \
     $(PWD)/src/osdebug.o \
-    $(PWD)/src/shell.o
+    $(PWD)/src/shell.o \
+    $(PWD)/src/diskio.o \
+    $(PWD)/src/ff.o \
+    $(PWD)/src/tm_stm32f4_delay.o \
+    $(PWD)/src/tm_stm32f4_fatfs.o \
+    $(PWD)/src/tm_stm32f4timer_properties.o
 
 CFLAGS += -I $(PWD)/include
 
