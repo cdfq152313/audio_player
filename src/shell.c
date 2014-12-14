@@ -168,7 +168,7 @@ void test_command(int n, char *argv[]) {
 	FATFS FatFs;
     //File object
     FIL fil;
-    fio_printf(1, "test ok\r\n");
+    fio_printf(1, "\r\ntest ok\r\n");
     //Free and total space
     uint32_t total, free;
     		//Mount drive
