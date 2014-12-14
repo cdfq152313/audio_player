@@ -84,6 +84,7 @@ OBJS += \
     $(PWD)/CORTEX_M4F_STM32F4/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_ltdc.o \
     $(PWD)/CORTEX_M4F_STM32F4/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_fmc.o \
     $(PWD)/CORTEX_M4F_STM32F4/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_rng.o \
+    $(PWD)/CORTEX_M4F_STM32F4/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_tim.o \
     $(PWD)/Utilities/STM32F429I-Discovery/stm32f429i_discovery.o \
     $(PWD)/Utilities/STM32F429I-Discovery/stm32f429i_discovery_sdram.o \
     $(PWD)/Utilities/STM32F429I-Discovery/stm32f429i_discovery_lcd.o \
@@ -100,7 +101,8 @@ OBJS += \
     $(PWD)/src/filesystem.o \
     $(PWD)/src/hash-djb2.o \
     $(PWD)/src/osdebug.o \
-    $(PWD)/src/shell.o
+    $(PWD)/src/shell.o \
+    $(PWD)/src/pwm.o
 
 CFLAGS += -I $(PWD)/include
 

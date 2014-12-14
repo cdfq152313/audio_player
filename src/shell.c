@@ -8,6 +8,9 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "host.h"
+#include "pwm.h"
+#include <math.h>
+#include "stm32f4xx_conf.h"
 
 typedef struct {
 	const char *name;
@@ -24,6 +27,7 @@ void help_command(int, char **);
 void host_command(int, char **);
 void mmtest_command(int, char **);
 void test_command(int, char **);
+void pwm_command(int, char **);
 
 #define MKCL(n, d) {.name=#n, .fptr=n ## _command, .desc=d}
 
@@ -35,8 +39,10 @@ cmdlist cl[]={
 	MKCL(host, "Run command on host"),
 	MKCL(mmtest, "heap memory allocation test"),
 	MKCL(help, "help"),
-	MKCL(test, "test new function")
+	MKCL(test, "test new function"),
+	MKCL(pwm, "pwm")
 };
+
 
 int parse_command(char *str, char *argv[]){
 	int b_quote=0, b_dbquote=0;
@@ -57,6 +63,10 @@ int parse_command(char *str, char *argv[]){
 	argv[count++]=&str[p];
 
 	return count;
+}
+
+void pwm_command(int n, char *argv[]){
+    PWM_Start();
 }
 
 void ls_command(int n, char *argv[]){
