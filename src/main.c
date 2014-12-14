@@ -166,9 +166,9 @@ int main()
     uint32_t total, free;
     
     //Initialize system
-    SystemInit();
+    //SystemInit();
     //Initialize delays
-    TM_DELAY_Init();
+    //TM_DELAY_Init();
 	
 
 
