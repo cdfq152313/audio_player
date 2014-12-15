@@ -172,7 +172,7 @@ void test_command(int n, char *argv[]) {
     //Free and total space
     uint32_t total, free;
     		//Mount drive
-    int i = f_mount(&FatFs, "", 1);
+    int i = f_mount(&FatFs, "/", 1);
     fio_printf(1, "%X\r\n", i);
     if (i == FR_OK) {
         fio_printf(1, "mount ok\r\n");
@@ -197,6 +197,8 @@ void test_command(int n, char *argv[]) {
         f_mount(0, "", 1);
     }
     fio_printf(1, "test ok\r\n");
+    fio_printf(1, "time2 %X \r\n", TM_DELAY_Time2());
+    fio_printf(1, "time2_2 %X \r\n", TM_DELAY_Time2());
 }
 
 cmdfunc *do_command(const char *cmd){

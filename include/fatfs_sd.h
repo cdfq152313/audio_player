@@ -26,8 +26,8 @@
 #endif
 
 #ifndef FATFS_CS_PIN
-#define FATFS_CS_RCC						RCC_AHB1Periph_GPIOA			
-#define FATFS_CS_PORT						GPIOA
+#define FATFS_CS_RCC						RCC_AHB1Periph_GPIOB			
+#define FATFS_CS_PORT						GPIOB
 #define FATFS_CS_PIN						GPIO_Pin_5
 #endif
 
