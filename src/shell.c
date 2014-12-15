@@ -12,6 +12,13 @@
 #include <math.h>
 #include "stm32f4xx_conf.h"
 
+#include "defines.h"
+#include "tm_stm32f4_delay.h"
+#include "tm_stm32f4_spi.h"
+#include "tm_stm32f4_fatfs.h"
+#include <stdio.h>
+#include <string.h>
+
 typedef struct {
 	const char *name;
 	cmdfunc *fptr;
@@ -28,6 +35,8 @@ void host_command(int, char **);
 void mmtest_command(int, char **);
 void test_command(int, char **);
 void pwm_command(int, char **);
+void mount_command(int, char **);
+void umount_command(int, char **);
 
 #define MKCL(n, d) {.name=#n, .fptr=n ## _command, .desc=d}
 
@@ -40,7 +49,9 @@ cmdlist cl[]={
 	MKCL(mmtest, "heap memory allocation test"),
 	MKCL(help, "help"),
 	MKCL(test, "test new function"),
-	MKCL(pwm, "pwm")
+	MKCL(pwm, "pwm"),
+	MKCL(mount, "mount SD card via spi1"),
+	MKCL(umount, "umount SD card")
 };
 
 
@@ -168,26 +179,77 @@ void help_command(int n,char *argv[]){
 }
 
 void test_command(int n, char *argv[]) {
-    int handle;
-    int error;
+	/*FATFS FatFs;
+    //File object
+    FIL fil;
+    fio_printf(1, "\r\ntest ok\r\n");
+    //Free and total space
+    uint32_t total, free;
+    		//Mount drive
+    int i = f_mount(&FatFs, "/", 1);
+    fio_printf(1, "%X\r\n", i);
+    if (i == FR_OK) {
+        fio_printf(1, "mount ok\r\n");
+        //Try to open file
+        if (f_open(&fil, "1stfile.txt", FA_OPEN_ALWAYS | FA_READ | FA_WRITE) == FR_OK) {
+            fio_printf(1, "open file ok\r\n");
+            //If we put more than 0 characters (everything OK)
+            if (f_puts("First string in my file\n", &fil) > 0) {
+                if (TM_FATFS_DriveSize(&total, &free) == FR_OK) {
+                    //Data for drive size are valid
+                    fio_printf(1, "puts ok\r\n");
 
-    fio_printf(1, "\r\n");
-
-    handle = host_action(SYS_OPEN, "output/syslog", 8);
-    if(handle == -1) {
-        fio_printf(1, "Open file error!\n\r");
-        return;
+                }
+                fio_printf(1, "puts ok2\r\n");
+            }
+            fio_printf(1, "open file ok2\r\n");
+            //Close file, don't forget this!
+            f_close(&fil);
+        }
+        fio_printf(1, "mount ok2\r\n");
+        //Unmount drive, don't forget this!
+        f_mount(0, "", 1);
     }
+    fio_printf(1, "test ok\r\n");
+    fio_printf(1, "time2 %X \r\n", TM_DELAY_Time2());
+    fio_printf(1, "time2_2 %X \r\n", TM_DELAY_Time2());*/
+}
+void mount_command(int n, char *argv[]) {
+	FATFS FatFs;
+	if (n == 1) {
+		if (f_mount(&FatFs, "/", 1) == FR_OK) {
+			fio_printf(1, "mount / success\r\n");
+		} else {
+			fio_printf(1, "mount / failed\r\n");
+		}
+	} else if (n == 2) {
+		if (f_mount(&FatFs, argv[1], 1) == FR_OK) {
+			fio_printf(1, "mount %s success \r\n", argv[1]);
+		} else {
+			fio_printf(1, "mount %s failed\r\n", argv[1]);
+		}
+	} else {
+		fio_printf(1, "parameter error\r\n");
+	}
+	
+}
 
-    char *buffer = "Test host_write function which can write data to output/syslog\n";
-    error = host_action(SYS_WRITE, handle, (void *)buffer, strlen(buffer));
-    if(error != 0) {
-        fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error);
-        host_action(SYS_CLOSE, handle);
-        return;
-    }
-
-    host_action(SYS_CLOSE, handle);
+void umount_command(int n , char *argv[]) {
+	if (n == 1) {
+		if (f_mount(0, "", 1) == FR_OK) {
+			fio_printf(1, "umount / success\r\n");
+		} else {
+			fio_printf(1, "umount / failed\r\n");
+		}
+	} else if (n == 2) {
+		if (f_mount(0, argv[1], 1) == FR_OK) {
+			fio_printf(1, "umount %s success \r\n", argv[1]);
+		} else {
+			fio_printf(1, "umount %s failed\r\n", argv[1]);
+		}
+	} else {
+		fio_printf(1, "parameter error\r\n");
+	}
 }
 
 cmdfunc *do_command(const char *cmd){

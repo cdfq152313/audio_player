@@ -57,7 +57,7 @@ CFLAGS += -D"assert_param(expr)=((void)0)"
 #My restart
 OBJS += \
       $(PWD)/src/main.o \
-      $(PWD)/CORTEX_M4F_STM32F4/startup/system_stm32f4xx.o 
+      $(PWD)/CORTEX_M4F_STM32F4/startup/system_stm32f4xx.o
       #$(PWD)/CORTEX_M4F_STM32F4/stm32f4xx_it.o \
 
 OBJS += \
@@ -102,7 +102,15 @@ OBJS += \
     $(PWD)/src/hash-djb2.o \
     $(PWD)/src/osdebug.o \
     $(PWD)/src/shell.o \
-    $(PWD)/src/pwm.o
+    $(PWD)/src/pwm.o \
+    $(PWD)/src/diskio.o \
+    $(PWD)/src/ff.o \
+    $(PWD)/src/tm_stm32f4_fatfs.o \
+    $(PWD)/src/fatfs_sd.o \
+    $(PWD)/src/syscall.o \
+    $(PWD)/src/unicode.o \
+    $(PWD)/src/tm_stm32f4_spi.o \
+    $(PWD)/src/tm_stm32f4_delay.o
 
 CFLAGS += -I $(PWD)/include
 

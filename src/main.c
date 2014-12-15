@@ -1,3 +1,10 @@
+#include "defines.h"
+#include "tm_stm32f4_delay.h"
+#include "tm_stm32f4_spi.h"
+#include "tm_stm32f4_fatfs.h"
+#include <stdio.h>
+#include <string.h>
+
 #include "stm32_init.h"
 #include "stm32f4xx.h"
 #include "stm32f4xx_conf.h"
@@ -152,7 +159,20 @@ int main()
 	
 	fs_init();
 	fio_init();
+
+	FATFS FatFs;
+    //File object
+    FIL fil;
+    //Free and total space
+    uint32_t total, free;
+    
+    //Initialize system
+    //SystemInit();
+    //Initialize delays
+    //TM_DELAY_Init();
 	
+
+
 	/* Create the queue used by the serial task.  Messages for write to
 	 * the RS232. */
 	vSemaphoreCreateBinary(serial_tx_wait_sem);
@@ -174,6 +194,8 @@ int main()
 
 	/* Start running the tasks. */
 	vTaskStartScheduler();
+
+
 
 	return 0;
 }
