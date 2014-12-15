@@ -32,6 +32,7 @@ void host_command(int, char **);
 void mmtest_command(int, char **);
 void test_command(int, char **);
 void mount_command(int, char **);
+void umount_command(int, char **);
 
 #define MKCL(n, d) {.name=#n, .fptr=n ## _command, .desc=d}
 
@@ -44,7 +45,8 @@ cmdlist cl[]={
 	MKCL(mmtest, "heap memory allocation test"),
 	MKCL(help, "help"),
 	MKCL(test, "test new function"),
-	MKCL(mount, "mount SD card via spi1")
+	MKCL(mount, "mount SD card via spi1"),
+	MKCL(umount, "umount SD card")
 };
 
 int parse_command(char *str, char *argv[]){
@@ -206,9 +208,9 @@ void mount_command(int n, char *argv[]) {
 	FATFS FatFs;
 	if (n == 1) {
 		if (f_mount(&FatFs, "/", 1) == FR_OK) {
-			fio_printf(1, "mount success\r\n");
+			fio_printf(1, "mount / success\r\n");
 		} else {
-			fio_printf(1, "mount failed\r\n");
+			fio_printf(1, "mount / failed\r\n");
 		}
 	} else if (n == 2) {
 		if (f_mount(&FatFs, argv[1], 1) == FR_OK) {
@@ -221,6 +223,25 @@ void mount_command(int n, char *argv[]) {
 	}
 	
 }
+
+void umount_command(int n , char *argv[]) {
+	if (n == 1) {
+		if (f_mount(0, "", 1) == FR_OK) {
+			fio_printf(1, "umount / success\r\n");
+		} else {
+			fio_printf(1, "umount / failed\r\n");
+		}
+	} else if (n == 2) {
+		if (f_mount(0, argv[1], 1) == FR_OK) {
+			fio_printf(1, "umount %s success \r\n", argv[1]);
+		} else {
+			fio_printf(1, "umount %s failed\r\n", argv[1]);
+		}
+	} else {
+		fio_printf(1, "parameter error\r\n");
+	}
+}
+
 cmdfunc *do_command(const char *cmd){
 
 	int i;

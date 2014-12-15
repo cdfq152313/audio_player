@@ -319,9 +319,9 @@ DSTATUS TM_FATFS_SD_disk_initialize (void) {
 	//Initialize CS pin
 	TM_FATFS_InitPins();
 	init_spi();
-	fio_printf(1, "TM_FATFS_SD_disk_initialize\r\n");
+	//fio_printf(1, "TM_FATFS_SD_disk_initialize\r\n");
 	if (!TM_FATFS_Detect()) {
-		fio_printf(1, "STA_NODISK %X\r\n", STA_NODISK);
+		//fio_printf(1, "STA_NODISK %X\r\n", STA_NODISK);
 		return STA_NODISK;
 	}
 	for (n = 10; n; n--) {
@@ -329,12 +329,12 @@ DSTATUS TM_FATFS_SD_disk_initialize (void) {
 	}
 	ty = 0;
 	if (send_cmd(CMD0, 0) == 1) {				/* Put the card SPI/Idle state */
-		fio_printf(1, "Put the card SPI/Idle state \r\n");
+		//fio_printf(1, "Put the card SPI/Idle state \r\n");
 		FATFS_DEBUG_SEND_USART("disk_initialize: CMD0 = 1");
 		//Timer1 = 1000;						/* Initialization timeout = 1 sec */
 		TM_DELAY_SetTime2(1000);
 		if (send_cmd(CMD8, 0x1AA) == 1) {	/* SDv2? */
-			fio_printf(1, "SDv2 \r\n");
+			//fio_printf(1, "SDv2 \r\n");
 			for (n = 0; n < 4; n++) ocr[n] = xchg_spi(0xFF);	/* Get 32 bit return value of R7 resp */
 			if (ocr[2] == 0x01 && ocr[3] == 0xAA) {				/* Is the card supports vcc of 2.7-3.6V? */
 				while (TM_DELAY_Time2() && send_cmd(ACMD41, 1UL << 30)) ;	/* Wait for end of initialization with ACMD41(HCS) */
@@ -343,17 +343,17 @@ DSTATUS TM_FATFS_SD_disk_initialize (void) {
 						ocr[n] = xchg_spi(0xFF);
 					}
 					ty = (ocr[0] & 0x40) ? CT_SD2 | CT_BLOCK : CT_SD2;	/* Card id SDv2 */
-					fio_printf(1, "TM_FATFS_SD_disk_initialize ty1 = %X \r\n", ty);
+					//fio_printf(1, "TM_FATFS_SD_disk_initialize ty1 = %X \r\n", ty);
 				}
 			}
 		} else {	/* Not SDv2 card */
-			fio_printf(1, "not SDv2 \r\n");
+			//fio_printf(1, "not SDv2 \r\n");
 			if (send_cmd(ACMD41, 0) <= 1) 	{	/* SDv1 or MMC? */
 				ty = CT_SD1; cmd = ACMD41;	/* SDv1 (ACMD41(0)) */
-				fio_printf(1, "TM_FATFS_SD_disk_initialize ty2 = %X \r\n", ty);
+				//fio_printf(1, "TM_FATFS_SD_disk_initialize ty2 = %X \r\n", ty);
 			} else {
 				ty = CT_MMC; cmd = CMD1;	/* MMCv3 (CMD1(0)) */
-				fio_printf(1, "TM_FATFS_SD_disk_initialize ty3 = %X \r\n", ty);
+				//fio_printf(1, "TM_FATFS_SD_disk_initialize ty3 = %X \r\n", ty);
 			}
 			while (TM_DELAY_Time2() && send_cmd(cmd, 0));			/* Wait for end of initialization */
 			//if (TM_DELAY_Time2() || send_cmd(CMD16, 512) != 0) {	/* Set block length: 512 */
@@ -364,14 +364,14 @@ DSTATUS TM_FATFS_SD_disk_initialize (void) {
 			//fio_printf(1, "TM_FATFS_SD_disk_initialize send_cmd(CMD16, 512) = %X \r\n", send_cmd(CMD16, 512));
 			if (send_cmd(CMD16, 512) != 0) {	/* Set block length: 512 */
 				ty = 0;
-				fio_printf(1, "TM_FATFS_SD_disk_initialize ty4 = %X \r\n", ty);
+				//fio_printf(1, "TM_FATFS_SD_disk_initialize ty4 = %X \r\n", ty);
 			}
 		}
 	}
 	TM_FATFS_SD_CardType = ty;	/* Card type */
 	FATFS_DEBUG_SEND_USART("disk_initialize: deselecting");
 	deselect();
-	fio_printf(1, "TM_FATFS_SD_disk_initialize ty = %X \r\n", ty);
+	//fio_printf(1, "TM_FATFS_SD_disk_initialize ty = %X \r\n", ty);
 	if (ty) {			/* OK */
 		TM_FATFS_SD_Stat &= ~STA_NOINIT;	/* Clear STA_NOINIT flag */
 	} else {			/* Failed */
