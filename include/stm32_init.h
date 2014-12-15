@@ -1,6 +1,7 @@
 #ifndef __STM32_INIT_H
 #define __STM32_INIT_H
 
+void RCC_Configuration(void);
 
 void init_rs232(void);
 

@@ -5,14 +5,34 @@
 
 void RCC_Configuration(void)
 {
-      /* --------------------------- System Clocks Configuration -----------------*/
-      /* USART1 clock enable */
-      RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
-      /* GPIOA clock enable */
-      RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+    ErrorStatus HSEStartUpStatus;
+    RCC_DeInit();
+
+    RCC_HSEConfig(RCC_HSE_ON);
+    HSEStartUpStatus = RCC_WaitForHSEStartUp();
+    if(HSEStartUpStatus == SUCCESS)
+    {
+      RCC_HCLKConfig(RCC_SYSCLK_Div1);
+      RCC_PCLK2Config(RCC_HCLK_Div1);
+      RCC_PCLK1Config(RCC_HCLK_Div2);
+      RCC_PLLConfig(RCC_PLLSource_HSE, 8, 168, 2, 6);
+      RCC_PLLCmd(ENABLE);
+      while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET);
+      RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
+      while(RCC_GetSYSCLKSource() != 0x08);
+      
+    }
+}
+
+void USART1_RCC_Configuration(void)
+{
+    /* USART1 clock enable */
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+    /* GPIOA clock enable */
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 }
  
-void GPIO_Configuration(void)
+void USART1_GPIO_Configuration(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -54,8 +74,8 @@ void USART1_Configuration(void)
 
 void init_rs232(void)
 {
-    RCC_Configuration();
-    GPIO_Configuration();
+    USART1_RCC_Configuration();
+    USART1_GPIO_Configuration();
     USART1_Configuration();
 }
 
