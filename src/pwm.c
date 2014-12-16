@@ -4,29 +4,55 @@
 #include "misc.h"
 #include "filesystem.h"
 #include <math.h>
-
+#include "ff.h"
 uint32_t play_time_other = 0;
 uint32_t play_time_sec = 0;
 
-short wave[42000];
+#define BUF_LENGTH 21000
+
+int i;
+short buf[BUF_LENGTH];
+short buf2[BUF_LENGTH];
+int br;
+int chunck2_size = 0;
+const int btr = BUF_LENGTH * sizeof(uint8_t);
+uint8_t cur_buf = 0;
+uint8_t update_buf = 0;
+uint32_t cur_point = 0;
+FIL fil;
+
+uint8_t back[BUF_LENGTH];
+
+//short wave[42000];
 
 void PWM_Start(void)
 {
-    int i;
-    for(i=0;i<42000;i++)
-        wave[i] = (sin(2.0 * 3.1415926535 * 400.0 * ((double)i / 42000.0) )+1) * 2000 / 2;
+    for(i=0;i<BUF_LENGTH;i++)
+         back[i] = (sin(2.0 * 3.1415926535 * 400.0 * ((double)i / 42000.0) )+1) * 2000 / 2;
 
     // for(i=0;i<42000;i+= 1000){
     //     fio_printf(1, "%x\r\n", wave[i]);    
     // }
+    if (f_open(&fil, "music.wav", FA_OPEN_ALWAYS | FA_READ) != FR_OK) {
+        fio_printf(1, "open file failed");
+        return;
+    }
 
-
+    f_lseek(&fil, 40);
+    f_read(&fil, &chunck2_size, 4, &br);
+    f_read(&fil, buf, btr, &br);
+    f_lseek(&fil, f_tell(&fil)+btr);
+    f_read(&fil, buf2, btr, &br);
+    f_lseek(&fil, f_tell(&fil)+btr);
+//fio_printf(1, "%d",chunck2_size);
     PWM_RCC_Configuration();
     PWM_GPIO_Configuration();
-    //PWM_TIM2_Configuration();
+    PWM_TIM2_Configuration();
     PWM_TIM1_Configuration();
 
     while(1){}
+
+    f_close(&fil);
 }
 
 void  PWM_RCC_Configuration(void)
@@ -40,22 +66,41 @@ void  PWM_RCC_Configuration(void)
 void TIM1_UP_TIM10_IRQHandler(void)
 {
     TIM_ClearITPendingBit(TIM1, TIM_FLAG_Update);
-    //play_time_other = TIM_GetCounter(TIM2) % 42000;
-    play_time_other = (play_time_other + 1) % 42000;
-    if(play_time_other == 0) play_time_sec++;
-    //TIM1->CCR1 = (sin(2.0 * 3.14159 * 400.0 * ((double)play_time_other / 42000.0) )+1) * 2000 / 2;
-    TIM1->CCR1 = wave[play_time_other];
+
+    uint32_t data;
+    if(cur_buf == 0) data = buf[cur_point*2] | (buf[cur_point*2+1] << 8);
+    else data = buf2[cur_point*2] | (buf2[cur_point*2+1] << 8);
+
+    TIM1->CCR1 = data * 2000 / 65536;
+
+    ++cur_point;
+    if(cur_point == BUF_LENGTH / 2)  {
+        cur_buf = !cur_buf;
+        update_buf = 1;
+        cur_point = 0;
+        play_time_sec++;
+    }
+    //if(play_time_sec > 10 ) TIM1->CCR1 = 0;
+
     // USART_SendData(USART1, wave[play_time_other]) ;
     //if(play_time_sec >= 10) TIM1->CCR1 = 0;
 }
-/*
+
 void TIM2_IRQHandler(void)
 {
-    TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
+    if(update_buf == 1)
+    {
+        if(cur_buf == 0)    f_read(&fil, buf2, btr, &br);
+        else f_read(&fil, buf, btr, &br);
 
-    //play_time_other = (play_time_other + 1) % 42000;
-    //if(play_time_other == 0) play_time_sec++;
-}*/
+        f_lseek(&fil, f_tell(&fil)+btr);
+
+        update_buf = 0;
+    }
+
+
+    TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
+}
 
 void  PWM_TIM2_Configuration(void)
 {
@@ -70,7 +115,7 @@ void  PWM_TIM2_Configuration(void)
     NVIC_Init(&NVIC_InitStructure);
 
   /* Time base configuration */
-    TIM_TimeBaseStructure.TIM_Period = 1999;
+    TIM_TimeBaseStructure.TIM_Period = 99;
     TIM_TimeBaseStructure.TIM_Prescaler = 0;
     TIM_TimeBaseStructure.TIM_ClockDivision = 0;
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
@@ -78,7 +123,7 @@ void  PWM_TIM2_Configuration(void)
     TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
 
     TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_Timing;     
-    TIM_OCInitStructure.TIM_Pulse = 999; 
+    TIM_OCInitStructure.TIM_Pulse = 99; 
     TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
     TIM_OC1Init(TIM2, &TIM_OCInitStructure);
 

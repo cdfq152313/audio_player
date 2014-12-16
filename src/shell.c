@@ -25,6 +25,8 @@ typedef struct {
 	const char *desc;
 } cmdlist;
 
+FATFS FatFs;
+
 void ls_command(int, char **);
 void man_command(int, char **);
 void cat_command(int, char **);
@@ -215,7 +217,6 @@ void test_command(int n, char *argv[]) {
     fio_printf(1, "time2_2 %X \r\n", TM_DELAY_Time2());*/
 }
 void mount_command(int n, char *argv[]) {
-	FATFS FatFs;
 	if (n == 1) {
 		if (f_mount(&FatFs, "/", 1) == FR_OK) {
 			fio_printf(1, "mount / success\r\n");
