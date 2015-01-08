@@ -1,4 +1,4 @@
-PROJECT = traffic
+PROJECT = player
 
 EXECUTABLE = $(PROJECT).elf
 BIN_IMAGE = $(PROJECT).bin
