@@ -4,29 +4,78 @@
 #include "misc.h"
 #include "filesystem.h"
 #include <math.h>
-
+#include "ff.h"
 uint32_t play_time_other = 0;
 uint32_t play_time_sec = 0;
 
-short wave[42000];
+#define BUF_LENGTH 4000
+
+int i;
+short buf[BUF_LENGTH];
+short buf2[BUF_LENGTH];
+int br;
+int chunck2_size = 0;
+const int btr = BUF_LENGTH * sizeof(short);
+uint8_t cur_buf = 0;
+uint8_t update_buf = 0;
+uint32_t cur_point = 0;
+FIL fil;
+
+//uint8_t back[BUF_LENGTH];
+
+//short wave[42000];
 
 void PWM_Start(void)
 {
-    int i;
-    for(i=0;i<42000;i++)
-        wave[i] = (sin(2.0 * 3.1415926535 * 400.0 * ((double)i / 42000.0) )+1) * 2000 / 2;
+    // for(i=0;i<BUF_LENGTH;i++)
+    //      back[i] = (sin(2.0 * 3.1415926535 * 400.0 * ((double)i / 42000.0) )+1) * 2000 / 2;
 
     // for(i=0;i<42000;i+= 1000){
     //     fio_printf(1, "%x\r\n", wave[i]);    
     // }
-
-
     PWM_RCC_Configuration();
+
+    if (f_open(&fil, "music.wav", FA_OPEN_ALWAYS | FA_READ) != FR_OK) {
+        fio_printf(1, "open file failed");
+        return;
+    }
+
+    f_lseek(&fil, 40);
+    f_read(&fil, &chunck2_size, 4, &br);
+    //f_lseek(&fil, 42000+44);
+    //f_read(&fil, buf, btr, &br);
+    //f_lseek(&fil, f_tell(&fil)+btr);
+    //f_read(&fil, buf2, btr, &br);
+    //f_lseek(&fil, f_tell(&fil)+btr);
+
+    for(i=0;i<BUF_LENGTH;i++)
+    {
+        buf[i] = 1000;
+        buf2[i] = 1000;
+    }
+
+    int max=2;
+    int16_t data;
+
+    for(i = 0; i < max; i+=1){
+        data = buf2[i*8] | (buf2[i*8+1] << 8);
+        fio_printf(1,"%X\r\n", data);
+        data = buf2[i*8+2] | (buf2[i*8+3] << 8);
+        fio_printf(1,"%X\r\n", data);
+        data = buf2[i*8+4] | (buf2[i*8+5] << 8);
+        fio_printf(1,"%X\r\n", data);
+        data = buf2[i*8+6] | (buf2[i*8+7] << 8);
+        fio_printf(1,"%X\r\n", data);
+    }
+
+
+//fio_printf(1, "%d",chunck2_size);
     PWM_GPIO_Configuration();
-    //PWM_TIM2_Configuration();
+    PWM_TIM2_Configuration();
     PWM_TIM1_Configuration();
 
     while(1){}
+    f_close(&fil);
 }
 
 void  PWM_RCC_Configuration(void)
@@ -40,22 +89,70 @@ void  PWM_RCC_Configuration(void)
 void TIM1_UP_TIM10_IRQHandler(void)
 {
     TIM_ClearITPendingBit(TIM1, TIM_FLAG_Update);
-    //play_time_other = TIM_GetCounter(TIM2) % 42000;
-    play_time_other = (play_time_other + 1) % 42000;
-    if(play_time_other == 0) play_time_sec++;
-    //TIM1->CCR1 = (sin(2.0 * 3.14159 * 400.0 * ((double)play_time_other / 42000.0) )+1) * 2000 / 2;
-    TIM1->CCR1 = wave[play_time_other];
+
+    if(cur_buf == 0) 
+    {
+        TIM1->CCR1 = buf[cur_point * 2];
+        TIM1->CCR2 = buf[cur_point * 2 + 1];
+    }
+    else
+    {
+        TIM1->CCR1 = buf2[cur_point * 2];
+        TIM1->CCR2 = buf2[cur_point * 2 + 1];
+    }
+
+    ++cur_point;
+
+    if(cur_point == BUF_LENGTH / 2)  {
+        cur_buf = !cur_buf;
+        update_buf = 1;
+        cur_point = 0;
+        play_time_sec++;
+    }
+    //if(play_time_sec > 10 ) TIM1->CCR1 = 0;
+
     // USART_SendData(USART1, wave[play_time_other]) ;
     //if(play_time_sec >= 10) TIM1->CCR1 = 0;
 }
-/*
+
 void TIM2_IRQHandler(void)
 {
-    TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
+    
+    if(update_buf == 1)
+    {
+        // USART_SendData(USART1, 48) ;
+        if(cur_buf == 0)   
+        {
+            f_read(&fil, buf2, btr, &br);
+            int i;
+            for(i=0;i<BUF_LENGTH;i++)
+            {
+                //short big = buf2[i*2] & 0x00FF;
+                //short little = (buf2[i*2] & 0xFF00) >> 8;
+                //short data = (big << 8) | little;
+                buf2[i] = (buf2[i]+32768) * 2000 / 65536;
+            }
+        }
+        else
+        {
+            f_read(&fil, buf, btr, &br);
+            int i;
+            for(i=0;i<BUF_LENGTH;i++)
+            {
+                // uint16_t big = buf[i*2] & 0x00FF;
+                // uint16_t little = (buf[i*2] & 0xFF00) >> 8;
+                // short data = (big << 8) | little;
+                buf[i] = (buf[i]+32768) * 2000 / 65536;
+            }
+        }
 
-    //play_time_other = (play_time_other + 1) % 42000;
-    //if(play_time_other == 0) play_time_sec++;
-}*/
+        update_buf = 0;
+        // USART_SendData(USART1, 49) ;
+    }
+    
+
+    TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
+}
 
 void  PWM_TIM2_Configuration(void)
 {
@@ -64,21 +161,21 @@ void  PWM_TIM2_Configuration(void)
     TIM_OCInitTypeDef  TIM_OCInitStructure;
 
     NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
   /* Time base configuration */
-    TIM_TimeBaseStructure.TIM_Period = 1999;
-    TIM_TimeBaseStructure.TIM_Prescaler = 0;
+    TIM_TimeBaseStructure.TIM_Period = 39999;
+    TIM_TimeBaseStructure.TIM_Prescaler = 99;
     TIM_TimeBaseStructure.TIM_ClockDivision = 0;
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
 
     TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
 
     TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_Timing;     
-    TIM_OCInitStructure.TIM_Pulse = 999; 
+    TIM_OCInitStructure.TIM_Pulse = 99; 
     TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
     TIM_OC1Init(TIM2, &TIM_OCInitStructure);
 
@@ -100,7 +197,7 @@ void  PWM_TIM1_Configuration(void)
 
     NVIC_InitStructure.NVIC_IRQChannel = TIM1_UP_TIM10_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
@@ -114,15 +211,17 @@ void  PWM_TIM1_Configuration(void)
     TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
 
   /* PWM1 Mode configuration: Channel1 */
-    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM2;
+    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
     TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-    TIM_OCInitStructure.TIM_Pulse = 1999;
+    TIM_OCInitStructure.TIM_Pulse = 999;
     TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
-    TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Reset;
+    TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
 
     TIM_OC1Init(TIM1, &TIM_OCInitStructure);
+    TIM_OC2Init(TIM1, &TIM_OCInitStructure);
 
     TIM_OC1PreloadConfig(TIM1, TIM_OCPreload_Enable);
+    TIM_OC2PreloadConfig(TIM1, TIM_OCPreload_Enable);
     TIM_ARRPreloadConfig(TIM1, ENABLE);
 
     TIM_ClearFlag(TIM1, TIM_FLAG_Update);
@@ -145,4 +244,5 @@ void PWM_GPIO_Configuration(void)
     GPIO_Init(GPIOE, &GPIO_InitStructure);
 
     GPIO_PinAFConfig(GPIOE, GPIO_PinSource9, GPIO_AF_TIM1);
+    GPIO_PinAFConfig(GPIOE, GPIO_PinSource11, GPIO_AF_TIM1);
 }
