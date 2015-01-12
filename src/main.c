@@ -25,6 +25,8 @@
 #include "shell.h"
 #include "host.h"
 
+#include "gui.h"
+
 //static void setup_hardware();
 
 volatile xSemaphoreHandle serial_tx_wait_sem = NULL;
@@ -162,15 +164,11 @@ int main()
 	fs_init();
 	fio_init();
 
-    //Initialize system
-    //SystemInit();
-    //Initialize delays
-    //TM_DELAY_Init();
+    gui_init();
     if (f_mount(&FatFs, "/", 1) != FR_OK) {
         fio_printf(1, "mount SD fault\r\n");
+        LCD_DisplayStringLine(LCD_LINE_7,(uint8_t*)"mount error QAQ");
     }
-
-    gui_start();
 
 	/* Create the queue used by the serial task.  Messages for write to
 	 * the RS232. */
@@ -179,10 +177,18 @@ int main()
 	 * Reference: www.freertos.org/a00116.html */
 	serial_rx_queue = xQueueCreate(1, sizeof(char));
 
-	/* Create a task to output text read from romfs. */
-	xTaskCreate(command_prompt,
-	            (signed portCHAR *) "CLI",
-	            512 /* stack size */, NULL, tskIDLE_PRIORITY + 2, NULL);
+	// /* Create a task to output text read from romfs. */
+	// xTaskCreate(command_prompt,
+	//             (signed portCHAR *) "CLI",
+	//             512 /* stack size */, NULL, tskIDLE_PRIORITY + 2, NULL);
+
+    xTaskCreate(gui_start1,
+                (signed portCHAR *) "start1",
+                128 /* stack size */, NULL, tskIDLE_PRIORITY + 2, NULL);
+
+    xTaskCreate(gui_start2,
+                (signed portCHAR *) "start2",
+                128 /* stack size */, NULL, tskIDLE_PRIORITY + 3, NULL);
 
 	/* Start running the tasks. */
 	vTaskStartScheduler();
