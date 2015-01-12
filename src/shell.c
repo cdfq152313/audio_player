@@ -217,10 +217,13 @@ void test_command(int n, char *argv[]) {
     fio_printf(1, "time2_2 %X \r\n", TM_DELAY_Time2());*/
 }
 void mount_command(int n, char *argv[]) {
+	int x = 0;
 	if (n == 1) {
-		if (f_mount(&FatFs, "/", 1) == FR_OK) {
+		x = f_mount(&FatFs, "/", 1);
+		if (x == FR_OK) {
 			fio_printf(1, "mount / success\r\n");
 		} else {
+			fio_printf(1, "failed code : %X\r\n ", x);
 			fio_printf(1, "mount / failed\r\n");
 		}
 	} else if (n == 2) {

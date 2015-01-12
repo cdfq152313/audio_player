@@ -22,13 +22,13 @@
 
 #ifndef FATFS_SPI
 #define FATFS_SPI							SPI1
-#define FATFS_SPI_PINSPACK					TM_SPI_PinsPack_1
+#define FATFS_SPI_PINSPACK					TM_SPI_PinsPack_2
 #endif
 
 #ifndef FATFS_CS_PIN
-#define FATFS_CS_RCC						RCC_AHB1Periph_GPIOB			
-#define FATFS_CS_PORT						GPIOB
-#define FATFS_CS_PIN						GPIO_Pin_5
+#define FATFS_CS_RCC						RCC_AHB1Periph_GPIOA			
+#define FATFS_CS_PORT						GPIOA
+#define FATFS_CS_PIN						GPIO_Pin_15
 #endif
 
 #ifndef FATFS_USE_DETECT_PIN
