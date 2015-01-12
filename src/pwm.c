@@ -36,7 +36,7 @@ void PWM_Start(void)
     // }
     PWM_RCC_Configuration();
 
-    if (f_open(&fil, "music1.wav", FA_OPEN_ALWAYS | FA_READ) != FR_OK) {
+    if (f_open(&fil, "music2.wav", FA_OPEN_ALWAYS | FA_READ) != FR_OK) {
         fio_printf(1, "open file failed");
         return;
     }
@@ -277,7 +277,7 @@ void  PWM_TIM1_Configuration(void)
     NVIC_Init(&NVIC_InitStructure);
 
   /* Time base configuration */
-    TIM_TimeBaseStructure.TIM_Period = 118;
+    TIM_TimeBaseStructure.TIM_Period = 124;
     TIM_TimeBaseStructure.TIM_Prescaler = 0;
     TIM_TimeBaseStructure.TIM_ClockDivision = 0;
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
