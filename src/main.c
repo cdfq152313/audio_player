@@ -170,7 +170,6 @@ int main()
     //SystemInit();
     //Initialize delays
     //TM_DELAY_Init();
-	
 
 
 	/* Create the queue used by the serial task.  Messages for write to
@@ -185,17 +184,8 @@ int main()
 	            (signed portCHAR *) "CLI",
 	            512 /* stack size */, NULL, tskIDLE_PRIORITY + 2, NULL);
 
-#if 0
-	/* Create a task to record system log. */
-	xTaskCreate(system_logger,
-	            (signed portCHAR *) "Logger",
-	            1024 /* stack size */, NULL, tskIDLE_PRIORITY + 1, NULL);
-#endif
-
 	/* Start running the tasks. */
 	vTaskStartScheduler();
-
-
 
 	return 0;
 }
