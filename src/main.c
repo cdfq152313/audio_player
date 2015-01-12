@@ -31,6 +31,8 @@ volatile xSemaphoreHandle serial_tx_wait_sem = NULL;
 /* Add for serial input */
 volatile xQueueHandle serial_rx_queue = NULL;
 
+FATFS FatFs;
+
 /* IRQ handler to handle USART1 interruptss (both transmit and receive
  * interrupts). */
 void USART1_IRQHandler()
@@ -160,17 +162,15 @@ int main()
 	fs_init();
 	fio_init();
 
-	FATFS FatFs;
-    //File object
-    FIL fil;
-    //Free and total space
-    uint32_t total, free;
-    
     //Initialize system
     //SystemInit();
     //Initialize delays
     //TM_DELAY_Init();
+    if (f_mount(&FatFs, "/", 1) != FR_OK) {
+        fio_printf(1, "mount SD fault\r\n");
+    }
 
+    gui_start();
 
 	/* Create the queue used by the serial task.  Messages for write to
 	 * the RS232. */

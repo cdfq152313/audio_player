@@ -103,6 +103,7 @@ OBJS += \
     $(PWD)/src/hash-djb2.o \
     $(PWD)/src/osdebug.o \
     $(PWD)/src/shell.o \
+    $(PWD)/src/gui.o \
     $(PWD)/src/pwm.o \
     $(PWD)/src/diskio.o \
     $(PWD)/src/ff.o \
