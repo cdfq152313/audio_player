@@ -22,8 +22,6 @@ CFLAGS += -mlittle-endian -mthumb
 # Need study
 CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=softfp -O0
 
-LD_SYS_LIBS = -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
-
 define get_library_path
     $(shell dirname $(shell $(CC) $(CFLAGS) -print-file-name=$(1)))
 endef
@@ -105,6 +103,7 @@ OBJS += \
     $(PWD)/src/hash-djb2.o \
     $(PWD)/src/osdebug.o \
     $(PWD)/src/shell.o \
+    $(PWD)/src/gui.o \
     $(PWD)/src/pwm.o \
     $(PWD)/src/diskio.o \
     $(PWD)/src/ff.o \

@@ -6,8 +6,12 @@
 #include <math.h>
 #include "ff.h"
 #include "stm32f4xx_dac.h"
+// <<<<<<< HEAD
 #include "mp3/minimp3.h"
 
+// =======
+// #include "gui.h"
+// >>>>>>> develop
 uint32_t play_time_other = 0;
 uint32_t play_time_sec = 0;
 
@@ -24,32 +28,18 @@ uint8_t update_buf = 0;
 uint32_t cur_point = 0;
 FIL fil;
 
-//uint8_t back[BUF_LENGTH];
+void play_test(void *p){
+    play("music1.wav");
+}
 
-//short wave[42000];
-
-void PWM_Start(void)
+int play(char * name)
 {
-    // for(i=0;i<BUF_LENGTH;i++)
-    //      back[i] = (sin(2.0 * 3.1415926535 * 400.0 * ((double)i / 42000.0) )+1) * 2000 / 2;
-
-    // for(i=0;i<42000;i+= 1000){
-    //     fio_printf(1, "%x\r\n", wave[i]);    
-    // }
-    PWM_RCC_Configuration();
-
-    if (f_open(&fil, "music2.wav", FA_OPEN_ALWAYS | FA_READ) != FR_OK) {
-        fio_printf(1, "open file failed");
-        return;
+    if (f_open(&fil, name, FA_OPEN_ALWAYS | FA_READ) != FR_OK) {
+        return -1;
     }
 
     f_lseek(&fil, 40);
     f_read(&fil, &chunck2_size, 4, &br);
-    //f_lseek(&fil, 42000+44);
-    //f_read(&fil, buf, btr, &br);
-    //f_lseek(&fil, f_tell(&fil)+btr);
-    //f_read(&fil, buf2, btr, &br);
-    //f_lseek(&fil, f_tell(&fil)+btr);
 
     for(i=0;i<BUF_LENGTH;i++)
     {
@@ -57,29 +47,36 @@ void PWM_Start(void)
         buf2[i] = 32768;
     }
 
-    int max=2;
-    int16_t data;
+    TIM_Cmd(TIM1, ENABLE);
+    TIM_Cmd(TIM2, ENABLE);
+    //DAC_Cmd(DAC_Channel_1, ENABLE);
+    DAC_Cmd(DAC_Channel_2, ENABLE);
+    return 0;
+}
 
-    for(i = 0; i < max; i+=1){
-        data = buf2[i*8] | (buf2[i*8+1] << 8);
-        fio_printf(1,"%X\r\n", data);
-        data = buf2[i*8+2] | (buf2[i*8+3] << 8);
-        fio_printf(1,"%X\r\n", data);
-        data = buf2[i*8+4] | (buf2[i*8+5] << 8);
-        fio_printf(1,"%X\r\n", data);
-        data = buf2[i*8+6] | (buf2[i*8+7] << 8);
-        fio_printf(1,"%X\r\n", data);
-    }
+void stop()
+{
+    TIM_Cmd(TIM1, DISABLE);
+    TIM_Cmd(TIM2, DISABLE);
+    //DAC_Cmd(DAC_Channel_1, DISABLE);
+    DAC_Cmd(DAC_Channel_2, DISABLE);
 
+    play_time_other = 0;
+    play_time_sec = 0;
+    chunck2_size = 0;
+    cur_buf = 0;
+    update_buf = 0;
+    cur_point = 0;
+    f_close(&fil);
+}
 
-//fio_printf(1, "%d",chunck2_size);
+void player_init(void)
+{
+    PWM_RCC_Configuration();
     DAC_Configuration();
     PWM_GPIO_Configuration();
     PWM_TIM2_Configuration();
     PWM_TIM1_Configuration();
-
-    while(1){}
-    f_close(&fil);
 }
 
 void DAC_Configuration(void)
@@ -94,6 +91,7 @@ void DAC_Configuration(void)
 
   /* DAC channel 1 & 2 (DAC_OUT1 = PA.4)(DAC_OUT2 = PA.5) configuration */
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5;
+    // GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_5;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
@@ -108,14 +106,14 @@ void DAC_Configuration(void)
     DAC_InitStructure.DAC_Trigger = DAC_Trigger_None;
     DAC_InitStructure.DAC_WaveGeneration = DAC_WaveGeneration_None;
     DAC_InitStructure.DAC_OutputBuffer = DAC_OutputBuffer_Disable;
-    DAC_Init(DAC_Channel_1, &DAC_InitStructure);
+    // DAC_Init(DAC_Channel_1, &DAC_InitStructure);
     DAC_Init(DAC_Channel_2, &DAC_InitStructure);
     //DAC_DualSoftwareTriggerCmd(ENABLE);
-    DAC_SoftwareTriggerCmd(DAC_Channel_1,ENABLE);
+    // DAC_SoftwareTriggerCmd(DAC_Channel_1,ENABLE);
     DAC_SoftwareTriggerCmd(DAC_Channel_2,ENABLE);
 
-    DAC_Cmd(DAC_Channel_1, ENABLE);
-    DAC_Cmd(DAC_Channel_2, ENABLE);
+    // DAC_Cmd(DAC_Channel_1, ENABLE);
+    // DAC_Cmd(DAC_Channel_2, ENABLE);
 }
 
 void  PWM_RCC_Configuration(void)
@@ -138,7 +136,7 @@ void TIM1_UP_TIM10_IRQHandler(void)
         int data2 = buf[(cur_point/16)*2+1] >> 4;
         if(cur_point%16 == 0)
         {
-            DAC_SetChannel1Data(DAC_Align_12b_R,data1);
+            // DAC_SetChannel1Data(DAC_Align_12b_R,data1);
             DAC_SetChannel2Data(DAC_Align_12b_R,data2);
         } 
         else 
@@ -148,7 +146,7 @@ void TIM1_UP_TIM10_IRQHandler(void)
                 if(data1 < 4094)
                 {
                     ++data1;
-                    DAC_SetChannel1Data(DAC_Align_12b_R,data1);
+                    // DAC_SetChannel1Data(DAC_Align_12b_R,data1);
                 }
                 
             }
@@ -160,7 +158,8 @@ void TIM1_UP_TIM10_IRQHandler(void)
         int data2 = buf2[(cur_point/16)*2+1] >> 4;
         if(cur_point%16 == 0)
         {
-            DAC_SetChannel1Data(DAC_Align_12b_R,data1);
+            
+            // DAC_SetChannel1Data(DAC_Align_12b_R,data1);
             DAC_SetChannel2Data(DAC_Align_12b_R,data2);
         } 
         else 
@@ -208,6 +207,8 @@ void TIM2_IRQHandler(void)
                 //short data = (big << 8) | little;
                 buf2[i] = ((short)buf2[i])+32768;
             }
+
+
         }
         else
         {
@@ -261,7 +262,7 @@ void  PWM_TIM2_Configuration(void)
     TIM_ITConfig(TIM2, TIM_IT_CC1, ENABLE);
 
  /* TIM2 enable counter */
-    TIM_Cmd(TIM2, ENABLE);
+    TIM_Cmd(TIM2, DISABLE);
 }
 
 void  PWM_TIM1_Configuration(void)
@@ -307,19 +308,20 @@ void  PWM_TIM1_Configuration(void)
     //TIM_CtrlPWMOutputs(TIM1, ENABLE);
 
  /* TIM4 enable counter */
-    TIM_Cmd(TIM1, ENABLE);
+    TIM_Cmd(TIM1, DISABLE);
 }
 
 void PWM_GPIO_Configuration(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_11;
+    // GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_11;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 ;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP ;
     GPIO_Init(GPIOE, &GPIO_InitStructure);
 
-    GPIO_PinAFConfig(GPIOE, GPIO_PinSource9, GPIO_AF_TIM1);
-    GPIO_PinAFConfig(GPIOE, GPIO_PinSource11, GPIO_AF_TIM1);
+    //GPIO_PinAFConfig(GPIOE, GPIO_PinSource9, GPIO_AF_TIM1);
+    //GPIO_PinAFConfig(GPIOE, GPIO_PinSource11, GPIO_AF_TIM1);
 }
