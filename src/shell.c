@@ -75,7 +75,6 @@ int parse_command(char *str, char *argv[]){
 }
 
 void pwm_command(int n, char *argv[]){
-    PWM_Start();
 }
 
 void ls_command(int n, char *argv[]){
