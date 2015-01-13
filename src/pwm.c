@@ -23,9 +23,6 @@ uint8_t update_buf = 0;
 uint32_t cur_point = 0;
 FIL fil;
 
-//uint8_t back[BUF_LENGTH];
-
-//short wave[42000];
 void play_test(void *p){
     play("music1.wav");
 }
@@ -47,7 +44,7 @@ int play(char * name)
 
     TIM_Cmd(TIM1, ENABLE);
     TIM_Cmd(TIM2, ENABLE);
-    DAC_Cmd(DAC_Channel_1, ENABLE);
+    //DAC_Cmd(DAC_Channel_1, ENABLE);
     DAC_Cmd(DAC_Channel_2, ENABLE);
     return 0;
 }
@@ -56,8 +53,15 @@ void stop()
 {
     TIM_Cmd(TIM1, DISABLE);
     TIM_Cmd(TIM2, DISABLE);
-    DAC_Cmd(DAC_Channel_1, DISABLE);
+    //DAC_Cmd(DAC_Channel_1, DISABLE);
     DAC_Cmd(DAC_Channel_2, DISABLE);
+
+    play_time_other = 0;
+    play_time_sec = 0;
+    chunck2_size = 0;
+    cur_buf = 0;
+    update_buf = 0;
+    cur_point = 0;
     f_close(&fil);
 }
 

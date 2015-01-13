@@ -9,7 +9,7 @@
 
 #include "pwm.h"
 
-#define MAX_LINE 15
+#define MAX_LINE 12
 
 static uint8_t state = 1;
 static uint8_t press_count = 0;
@@ -40,6 +40,7 @@ void gui_init(){
     LCD_Clear(LCD_COLOR_WHITE);
     LCD_SetBackColor(LCD_COLOR_WHITE);
     LCD_SetTextColor(LCD_COLOR_BLACK);
+
 }
 
 void display_choosen_line(uint16_t line, uint8_t* str){
@@ -90,6 +91,7 @@ void release_button(){
 void gui_start(void *pvParameters){
     portBASE_TYPE xStatus;
     scan_files("/");
+    uint8_t playing = 0;
 
     while(1){
         switch(state){
@@ -121,7 +123,7 @@ void gui_start(void *pvParameters){
                 xStatus = xQueueSendToBack( play_queue, &file[curfile], ( TickType_t ) 10 );
                 if( xStatus != pdPASS )
                 {
-                    LCD_DisplayStringLine(LINE(4),(uint8_t*)"send error");
+                    display_normal_line(MAX_LINE, "send error");
                 }
                 state = 4;
             }
@@ -140,13 +142,23 @@ void gui_start(void *pvParameters){
 void gui_play(void *pvParameters){
     portBASE_TYPE xStatus;
     FILINFO file;
+    uint8_t playing = 0;
     while(1){
         xStatus = xQueueReceive( play_queue, &file, portMAX_DELAY );
         if( xStatus == pdPASS )
         {
-            LCD_ClearLine(LINE(5));
-            LCD_DisplayStringLine(LINE(5),(uint8_t*)file.fname);
-            play(file.fname);
+            if(!playing){
+                playing = 1;
+                if (play(file.fname) == -1)
+                    display_normal_line(MAX_LINE, "open file error");
+                else
+                    display_normal_line(MAX_LINE, "play");
+            }
+            else{
+                playing = 0;
+                stop();
+                display_normal_line(MAX_LINE, "stop");
+            }
         }
         else{
             LCD_ClearLine(LINE(5));
