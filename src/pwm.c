@@ -6,6 +6,8 @@
 #include <math.h>
 #include "ff.h"
 #include "stm32f4xx_dac.h"
+#include "mp3/minimp3.h"
+
 uint32_t play_time_other = 0;
 uint32_t play_time_sec = 0;
 

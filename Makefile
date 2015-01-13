@@ -22,6 +22,8 @@ CFLAGS += -mlittle-endian -mthumb
 # Need study
 CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=softfp -O0
 
+LD_SYS_LIBS = -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
+
 define get_library_path
     $(shell dirname $(shell $(CC) $(CFLAGS) -print-file-name=$(1)))
 endef
@@ -111,7 +113,19 @@ OBJS += \
     $(PWD)/src/syscall.o \
     $(PWD)/src/unicode.o \
     $(PWD)/src/tm_stm32f4_spi.o \
-    $(PWD)/src/tm_stm32f4_delay.o
+    $(PWD)/src/tm_stm32f4_delay.o \
+    $(PWD)/src/mp3/minimp3.o \
+    $(PWD)/src/mp3/stream.o \
+    $(PWD)/src/mp3/bit.o \
+    $(PWD)/src/mp3/frame.o \
+    $(PWD)/src/mp3/layer3.o \
+    $(PWD)/src/mp3/timer.o \
+    $(PWD)/src/mp3/huffman.o \
+    $(PWD)/src/mp3/layer12.o \
+    $(PWD)/src/mp3/decoder.o \
+    $(PWD)/src/mp3/synth.o \
+    $(PWD)/src/mp3/__STD_LIB_sbrk.o 
+
 
 CFLAGS += -I $(PWD)/include
 
