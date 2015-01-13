@@ -7,53 +7,34 @@
 #include "queue.h"
 #include "semphr.h"
 
-FRESULT scan_files (char* path )
+#define MAX_LINE 15
+
+static uint8_t state = 1;
+static uint8_t press_count = 0;
+static uint8_t press_count_max = 5;
+static uint8_t curfile = 0;
+static uint8_t maxfile = 0;
+static FILINFO file[MAX_LINE];
+extern volatile xQueueHandle play_queue;
+
+FRESULT scan_files (char* path)
 {
     FRESULT res;
-    FILINFO fno;
     DIR dir;
-    int i;
-    uint16_t line = 0;
-    char *fn;   /* This function assumes non-Unicode configuration */
+    uint16_t index = 0;
 
     res = f_opendir(&dir, path);                       /* Open the directory */
-    LCD_DisplayStringLine(LCD_LINE_0,(uint8_t*)"open d ok");
     if (res == FR_OK) {
-        i = strlen(path);
-        for (;;) {
-            res = f_readdir(&dir, &fno);                   /* Read a directory item */
-            LCD_DisplayStringLine(LCD_LINE_0,(uint8_t*)"read d ok");
-            if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
-            if (fno.fname[0] == '.') continue;             /* Ignore dot entry */
-            fn = fno.fname;
-            if (fno.fattrib & AM_DIR) {                    /* It is a directory */
-                sprintf(&path[i], "/%s", fn);
-                res = scan_files(path);
-                path[i] = 0;
-                if (res != FR_OK) break;
-            } else {                                       /* It is a file. */
-                LCD_DisplayStringLine(LCD_LINE_1,(uint8_t*)fn);
-                line %= 20;
-                LCD_DisplayStringLine(LCD_LINE_2,(uint8_t*)"press button");
-
-                while (STM_EVAL_PBGetState(BUTTON_USER) != Bit_RESET)
-                {
-                }
-                /* Wait for User push-button is released */
-                while (STM_EVAL_PBGetState(BUTTON_USER) != Bit_SET)
-                {
-                }
-            }
+        while (1) {
+            res = f_readdir(&dir, &file[index]);                   /* Read a directory item */
+            if (res != FR_OK || file[index].fname[0] == 0) break;  /* Break on error or end of dir */
+            if (file[index].fname[0] == '.') continue;             /* Ignore dot entry */
+            LCD_DisplayStringLine(LINE(index),(uint8_t*)file[index].fname);
+            index ++;
         }
         f_closedir(&dir);
     }
-
     return res;
-}
-
-
-void play_screen(){
-
 }
 
 void gui_init(){
@@ -75,44 +56,66 @@ void gui_init(){
 
     /* Display test name on LCD */
     LCD_Clear(LCD_COLOR_WHITE);
-    LCD_SetBackColor(LCD_COLOR_BLUE);
-    LCD_SetTextColor(LCD_COLOR_WHITE);
-    LCD_DisplayStringLine(LCD_LINE_4,(uint8_t*)"Hello world");
-    LCD_DisplayStringLine(LCD_LINE_5,(uint8_t*)"Press User button");
-    LCD_DisplayStringLine(LCD_LINE_6,(uint8_t*)"to display file");
-
+    LCD_SetBackColor(LCD_COLOR_WHITE);
+    LCD_SetTextColor(LCD_COLOR_BLACK);
 }
 
-void gui_start1(void *pvParameters){
-    int set = 0;
+void release_button(){
+    press_count = 0;
+    state = 1;
+}
+
+void gui_start(void *pvParameters){
+    portBASE_TYPE xStatus;
+    scan_files("/");
     while(1){
-        LCD_ClearLine(LCD_LINE_7);
-        LCD_ClearLine(LCD_LINE_8);
-        if(set){
-            LCD_DisplayStringLine(LCD_LINE_7,(uint8_t*)"task oneee");
-            set = !set;
+        switch(state){
+        case 1:
+            if (STM_EVAL_PBGetState(BUTTON_USER) != Bit_RESET){
+                press_count ++;
+                if(press_count >= press_count_max)
+                    state = 2;
+            }
+            if (STM_EVAL_PBGetState(BUTTON_USER) != Bit_SET){
+                curfile ++;
+                curfile %= 3;
+                release_button();
+            }
+            break;
+        case 2:
+            if (STM_EVAL_PBGetState(BUTTON_USER) != Bit_RESET){
+                xStatus = xQueueSendToBack( play_queue, &file[curfile], ( TickType_t ) 10 );
+                if( xStatus != pdPASS )
+                {
+                    LCD_DisplayStringLine(LINE(4),(uint8_t*)"send error");
+                }
+                state = 3;
+            }
+            if (STM_EVAL_PBGetState(BUTTON_USER) != Bit_SET)
+                release_button();
+            break;
+        case 3:
+            if (STM_EVAL_PBGetState(BUTTON_USER) != Bit_SET)
+                release_button();
+            break;
         }
-        else{
-            LCD_DisplayStringLine(LCD_LINE_8,(uint8_t*)"task oneee");
-            set = !set;
-        }
-        vTaskDelay(500);
+        vTaskDelay(50);
     }
 }
 
-void gui_start2(void *pvParameters){
-    int set = 0;
+void gui_play(void *pvParameters){
+    portBASE_TYPE xStatus;
+    FILINFO file;
     while(1){
-        LCD_ClearLine(LCD_LINE_9);
-        LCD_ClearLine(LCD_LINE_10);
-        if(set){
-            LCD_DisplayStringLine(LCD_LINE_9,(uint8_t*)"task twoo");
-            set = !set;
+        xStatus = xQueueReceive( play_queue, &file, portMAX_DELAY );
+        if( xStatus == pdPASS )
+        {
+            LCD_ClearLine(LINE(5));
+            LCD_DisplayStringLine(LINE(5),(uint8_t*)file.fname);
         }
         else{
-            LCD_DisplayStringLine(LCD_LINE_10,(uint8_t*)"task twoo");
-            set = !set;
+            LCD_ClearLine(LINE(5));
+            LCD_DisplayStringLine(LINE(5),(uint8_t*)"could not receive data");
         }
-        vTaskDelay(500);
     }
 }
