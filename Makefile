@@ -93,16 +93,10 @@ OBJS += \
 
 # shell
 OBJS += \
-    $(PWD)/src/clib.o \
-    $(PWD)/src/fio.o \
     $(PWD)/src/host.o \
-    $(PWD)/src/mmtest.o \
-    $(PWD)/src/romfs.o \
     $(PWD)/src/stm32_init.o \
-    $(PWD)/src/filesystem.o \
     $(PWD)/src/hash-djb2.o \
     $(PWD)/src/osdebug.o \
-    $(PWD)/src/shell.o \
     $(PWD)/src/gui.o \
     $(PWD)/src/pwm.o \
     $(PWD)/src/diskio.o \
