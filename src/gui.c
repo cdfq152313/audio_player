@@ -94,6 +94,8 @@ FRESULT scan_files (char* nextdir)
 
     // initalize
     if(!curdir[0]){
+        curdir[0] = '/';
+        curdir[1] = 0;
         res = f_opendir(&dir, "/");
     }
 
@@ -101,18 +103,9 @@ FRESULT scan_files (char* nextdir)
     // if not, use previous dir
     if(nextdir){
         f_closedir(&dir);
-        if(nextdir[0] == '.' && nextdir[1] == '.'){
-            char * pch;
-            pch=strrchr(curdir, '/');
-            if(curdir == pch)
-                *(pch+1) = 0;
-            else
-                *pch = 0;
-        }
-        else{
+        if(curdir[1])
             strcat (curdir,"/");
-            strcat (curdir,nextdir);
-        }
+        strcat (curdir,nextdir);
         res = f_opendir(&dir, curdir);
     }
 
@@ -188,12 +181,23 @@ void release_button(){
 
 void open_file(){
     static uint8_t playing = 0;
+
     if(!playing){
         playing = 1;
-        if (play(file[curfile].fname) == -1)
+
+        uint16_t pathlen = strlen(curdir);
+        display_normal_line(MAX_LINE-1, curdir);
+        if(curdir[1])
+            strcat(curdir, "/");
+        strcat(curdir, file[curfile].fname);
+        display_normal_line(MAX_LINE, curdir);
+        if (play(curdir) == -1){
             display_normal_line(MAX_LINE, "open file error");
-        else
+        }
+        else{
             display_normal_line(MAX_LINE, "play");
+        }
+        curdir[pathlen] = 0;
     }
     else{
         playing = 0;
