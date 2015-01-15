@@ -107,17 +107,24 @@ OBJS += \
     $(PWD)/src/unicode.o \
     $(PWD)/src/tm_stm32f4_spi.o \
     $(PWD)/src/tm_stm32f4_delay.o \
-    $(PWD)/src/mp3/minimp3.o \
-    $(PWD)/src/mp3/stream.o \
-    $(PWD)/src/mp3/bit.o \
-    $(PWD)/src/mp3/frame.o \
-    $(PWD)/src/mp3/layer3.o \
-    $(PWD)/src/mp3/timer.o \
+    $(PWD)/src/mp3/__STD_LIB_sbrk.o \
+    $(PWD)/src/mp3/bitstream.o \
+    $(PWD)/src/mp3/buffers.o \
+    $(PWD)/src/mp3/dct32.o \
+    $(PWD)/src/mp3/dequant.o \
+    $(PWD)/src/mp3/dqchan.o \
+    $(PWD)/src/mp3/imdct.o \
+    $(PWD)/src/mp3/mp3dec.o \
+    $(PWD)/src/mp3/mp3tabs.o \
     $(PWD)/src/mp3/huffman.o \
-    $(PWD)/src/mp3/layer12.o \
-    $(PWD)/src/mp3/decoder.o \
-    $(PWD)/src/mp3/synth.o \
-    $(PWD)/src/mp3/__STD_LIB_sbrk.o 
+    $(PWD)/src/mp3/hufftabs.o \
+    $(PWD)/src/mp3/polyphase.o \
+    $(PWD)/src/mp3/stproc.o \
+    $(PWD)/src/mp3/subband.o \
+    $(PWD)/src/mp3/trigtabs.o \
+    $(PWD)/src/mp3/scalfact.o \
+    $(PWD)/src/mp3/asmmisc.o \
+    $(PWD)/src/mp3/asmpoly.o
 
 
 CFLAGS += -I $(PWD)/include

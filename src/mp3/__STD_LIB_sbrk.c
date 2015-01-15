@@ -20,7 +20,7 @@
 	   brk_siz  +=  size;
 	   return(  (char*)_heep  +  brk_siz  -  size);
 	}
-
+/*
 extern void _exit(void) {
     while(1) {
         // Loop until reset
@@ -30,4 +30,4 @@ extern void _exit(void) {
 extern int _getpid(void){return 1;}
 
 
-void _kill(int pid, int sig){}
+void _kill(int pid, int sig){}*/
