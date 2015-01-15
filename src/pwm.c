@@ -5,30 +5,39 @@
 #include <math.h>
 #include "ff.h"
 #include "stm32f4xx_dac.h"
-// <<<<<<< HEAD
-#include "mp3/minimp3.h"
+#include "mp3dec.h"
+#include "mp3common.h"
+#include "gui.h"
 
-// =======
-// #include "gui.h"
-// >>>>>>> develop
 uint32_t play_time_other = 0;
 uint32_t play_time_sec = 0;
 
-#define BUF_LENGTH 4000
+#define BUF_LENGTH 2304
+#define READBUF_SIZE 1940
 
 int i;
-uint16_t buf[BUF_LENGTH];
-uint16_t buf2[BUF_LENGTH];
-int br;
+
+uint16_t *buf;
+uint16_t *buf2;
+static uint8_t readBuf[READBUF_SIZE];
 int chunck2_size = 0;
-const int btr = BUF_LENGTH * sizeof(uint16_t);
 uint8_t cur_buf = 0;
 uint8_t update_buf = 0;
 uint32_t cur_point = 0;
 FIL fil;
+static HMP3Decoder hMP3Decoder;
+MP3FrameInfo mp3FrameInfo; 
+volatile u32 bytesLeft = 0; 
+volatile u32 outOfData = 0;
+uint8_t *readPtr = readBuf;
+uint32_t offset;  
+UINT cnt;
+int count = 0;
+int ok = 1;
+
 
 void play_test(void *p){
-    play("music1.wav");
+    play("C128.mp3");
 }
 
 int play(char * name)
@@ -37,19 +46,22 @@ int play(char * name)
         return -1;
     }
 
-    f_lseek(&fil, 40);
-    f_read(&fil, &chunck2_size, 4, &br);
+    TIM_Cmd(TIM1, ENABLE);
+    TIM_Cmd(TIM2, ENABLE);
+    //DAC_Cmd(DAC_Channel_1, ENABLE);
+    DAC_Cmd(DAC_Channel_2, ENABLE);
 
-    for(i=0;i<BUF_LENGTH;i++)
+    for(int i=0;i<BUF_LENGTH;i++)
     {
         buf[i] = 32768;
         buf2[i] = 32768;
     }
 
-    TIM_Cmd(TIM1, ENABLE);
-    TIM_Cmd(TIM2, ENABLE);
-    //DAC_Cmd(DAC_Channel_1, ENABLE);
-    DAC_Cmd(DAC_Channel_2, ENABLE);
+    int cnt;
+    f_read(&fil,readBuf,sizeof(readBuf),&cnt);
+    bytesLeft += cnt;
+    readPtr = readBuf;
+
     return 0;
 }
 
@@ -62,10 +74,9 @@ void stop()
 
     play_time_other = 0;
     play_time_sec = 0;
-    chunck2_size = 0;
-    cur_buf = 0;
-    update_buf = 0;
-    cur_point = 0;
+    bytesLeft = 0;
+    outOfData = 0;
+
     f_close(&fil);
 }
 
@@ -76,6 +87,9 @@ void player_init(void)
     PWM_GPIO_Configuration();
     PWM_TIM2_Configuration();
     PWM_TIM1_Configuration();
+
+    buf = pvPortMalloc(sizeof(uint16_t)*BUF_LENGTH);
+    buf2 = pvPortMalloc(sizeof(uint16_t)*BUF_LENGTH);
 }
 
 void DAC_Configuration(void)
@@ -89,11 +103,12 @@ void DAC_Configuration(void)
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_DAC, ENABLE);
 
   /* DAC channel 1 & 2 (DAC_OUT1 = PA.4)(DAC_OUT2 = PA.5) configuration */
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
     // GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_5;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+
     GPIO_Init(GPIOA, &GPIO_InitStructure);
 
   /* TIM6 Configuration ------------------------------------------------------*/ 
@@ -111,8 +126,7 @@ void DAC_Configuration(void)
     // DAC_SoftwareTriggerCmd(DAC_Channel_1,ENABLE);
     DAC_SoftwareTriggerCmd(DAC_Channel_2,ENABLE);
 
-    // DAC_Cmd(DAC_Channel_1, ENABLE);
-    // DAC_Cmd(DAC_Channel_2, ENABLE);
+    hMP3Decoder = MP3InitDecoder();
 }
 
 void  PWM_RCC_Configuration(void)
@@ -127,10 +141,17 @@ void TIM1_UP_TIM10_IRQHandler(void)
 {
     TIM_ClearITPendingBit(TIM1, TIM_FLAG_Update);
 
-    if(cur_buf == 0) 
+    if(cur_point == 0)
     {
-        //TIM1->CCR1 = buf[cur_point * 2];
-        //TIM1->CCR2 = buf[cur_point * 2 + 1];
+        if(cur_buf == 1 && ok == 0) {
+            LCD_ClearLine( LINE(10) );
+            LCD_DisplayStringLine(LINE(10), "nooooo");
+        }
+        LCD_ClearLine( LINE(10) );
+    }
+    else if(cur_buf == 0) 
+    {
+
         int data1 = buf[(cur_point/16)*2] >> 4;
         int data2 = buf[(cur_point/16)*2+1] >> 4;
         if(cur_point%16 == 0)
@@ -140,12 +161,13 @@ void TIM1_UP_TIM10_IRQHandler(void)
         } 
         else 
         {
-            if(cur_point%16 == 15 - buf[(cur_point/16)*2] % 16)
+            
+            if(cur_point%16 == 15 - buf[(cur_point/16)*2+1] % 16)
             {
-                if(data1 < 4094)
+                if(data2 < 4094)
                 {
-                    ++data1;
-                    // DAC_SetChannel1Data(DAC_Align_12b_R,data1);
+                    ++data2;
+                    DAC_SetChannel1Data(DAC_Align_12b_R,data2);
                 }
                 
             }
@@ -153,6 +175,7 @@ void TIM1_UP_TIM10_IRQHandler(void)
     }
     else
     {
+        
         int data1 = buf2[(cur_point/16)*2] >> 4;
         int data2 = buf2[(cur_point/16)*2+1] >> 4;
         if(cur_point%16 == 0)
@@ -172,38 +195,62 @@ void TIM1_UP_TIM10_IRQHandler(void)
                 }
             }
         }
+        
     }
 
     ++cur_point;
 
     if(cur_point == BUF_LENGTH * 8)  {
+        if(cur_buf == 1)ok = 0;
         cur_buf = !cur_buf;
         update_buf = 1;
         cur_point = 0;
         play_time_sec++;
     }
-    //if(play_time_sec > 10 ) TIM1->CCR1 = 0;
+}
 
-    // USART_SendData(USART1, wave[play_time_other]) ;
-    //if(play_time_sec >= 10) TIM1->CCR1 = 0;
+void decode(uint16_t *outbuf)
+{
+    offset = MP3FindSyncWord(readPtr, bytesLeft);
+    
+    if(offset < 0)
+    {
+        stop();
+    }
+    else
+    {
+        readPtr += offset;                         //data start point
+        bytesLeft -= offset;                 //in buffer
+        MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, outbuf, 0);
+
+        if (bytesLeft < READBUF_SIZE)
+        {
+            memmove(readBuf,readPtr,bytesLeft);
+            f_read(&fil, readBuf + bytesLeft, sizeof(readBuf) - bytesLeft, &cnt);
+            if (cnt < READBUF_SIZE - bytesLeft);
+                memset(readBuf + bytesLeft + cnt, 0, READBUF_SIZE - bytesLeft - cnt);
+            bytesLeft=READBUF_SIZE;
+            readPtr=readBuf;               
+        }
+
+        MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
+        if(mp3FrameInfo.outputSamps != 2304)   decode(outbuf);
+    }
 }
 
 void TIM2_IRQHandler(void)
 {
-    
+    TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
     if(update_buf == 1)
     {
-        // USART_SendData(USART1, 48) ;
         if(cur_buf == 0)   
         {
-            f_read(&fil, buf2, btr, &br);
+ok = 1;
+            decode(buf2);
 
             int i;
             for(i=0;i<BUF_LENGTH;i++)
             {
-                //short big = buf2[i*2] & 0x00FF;
-                //short little = (buf2[i*2] & 0xFF00) >> 8;
-                //short data = (big << 8) | little;
                 buf2[i] = ((short)buf2[i])+32768;
             }
 
@@ -211,24 +258,16 @@ void TIM2_IRQHandler(void)
         }
         else
         {
-            f_read(&fil, buf, btr, &br);
+            decode(buf);
             
             int i;
             for(i=0;i<BUF_LENGTH;i++)
             {
-                // uint16_t big = buf[i*2] & 0x00FF;
-                // uint16_t little = (buf[i*2] & 0xFF00) >> 8;
-                // short data = (big << 8) | little;
                 buf[i] = ((short)buf[i])+32768;
-            }           
+            }          
         }
-
         update_buf = 0;
-        // USART_SendData(USART1, 49) ;
     }
-    
-
-    TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
 }
 
 void  PWM_TIM2_Configuration(void)
@@ -244,8 +283,8 @@ void  PWM_TIM2_Configuration(void)
     NVIC_Init(&NVIC_InitStructure);
 
   /* Time base configuration */
-    TIM_TimeBaseStructure.TIM_Period = 39999;
-    TIM_TimeBaseStructure.TIM_Prescaler = 99;
+    TIM_TimeBaseStructure.TIM_Period = 1199;
+    TIM_TimeBaseStructure.TIM_Prescaler = 399;
     TIM_TimeBaseStructure.TIM_ClockDivision = 0;
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
 
@@ -279,7 +318,7 @@ void  PWM_TIM1_Configuration(void)
     NVIC_Init(&NVIC_InitStructure);
 
   /* Time base configuration */
-    TIM_TimeBaseStructure.TIM_Period = 124;
+    TIM_TimeBaseStructure.TIM_Period = 249;
     TIM_TimeBaseStructure.TIM_Prescaler = 0;
     TIM_TimeBaseStructure.TIM_ClockDivision = 0;
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;

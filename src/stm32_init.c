@@ -16,7 +16,7 @@ void RCC_Configuration(void)
       RCC_PCLK2Config(RCC_HCLK_Div1);
       RCC_PCLK1Config(RCC_HCLK_Div2);
       //RCC_PLLConfig(RCC_PLLSource_HSE, 8, 168, 2, 6);
-      RCC_PLLConfig(RCC_PLLSource_HSE, 10, 441, 4, 6);
+      RCC_PLLConfig(RCC_PLLSource_HSE, 5, 441, 4, 6);
       RCC_PLLCmd(ENABLE);
       while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET);
       RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
