@@ -258,7 +258,7 @@ void open_file(){
         playing = 1;
 
         uint16_t pathlen = strlen(curdir);
-        display_normal_line(MAX_LINE-1, curdir);
+        //display_normal_line(MAX_LINE-1, curdir);
         if(curdir[1])
             strcat(curdir, "/");
         strcat(curdir, file[curfile].fname);

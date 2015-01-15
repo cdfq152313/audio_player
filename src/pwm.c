@@ -24,6 +24,7 @@ int chunck2_size = 0;
 uint8_t cur_buf = 0;
 uint8_t update_buf = 0;
 uint32_t cur_point = 0;
+
 FIL fil;
 static HMP3Decoder hMP3Decoder;
 MP3FrameInfo mp3FrameInfo; 
@@ -34,6 +35,7 @@ uint32_t offset;
 UINT cnt;
 int count = 0;
 int ok = 1;
+int ismp3 = 0;
 
 
 void play_test(void *p){
@@ -45,6 +47,8 @@ int play(char * name)
     if (f_open(&fil, name, FA_OPEN_ALWAYS | FA_READ) != FR_OK) {
         return -1;
     }
+
+    if (strstr(name, "MP3")) ismp3 = 1;
 
     TIM_Cmd(TIM1, ENABLE);
     TIM_Cmd(TIM2, ENABLE);
@@ -246,8 +250,8 @@ void TIM2_IRQHandler(void)
         if(cur_buf == 0)   
         {
 ok = 1;
-            decode(buf2);
-
+            if(ismp3)decode(buf2);
+            else    f_read(&fil, buf2, BUF_LENGTH*sizeof(uint16_t), &cnt);
             int i;
             for(i=0;i<BUF_LENGTH;i++)
             {
@@ -258,7 +262,8 @@ ok = 1;
         }
         else
         {
-            decode(buf);
+            if(ismp3)decode(buf);
+            else    f_read(&fil, buf, BUF_LENGTH*sizeof(uint16_t), &cnt);
             
             int i;
             for(i=0;i<BUF_LENGTH;i++)
