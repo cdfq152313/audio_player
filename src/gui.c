@@ -155,7 +155,9 @@ FRESULT scan_files (char* nextdir)
                 else
                     break;
             }
-
+            if (!valid_format(&file[index])) {
+                continue;
+            }
             // print file
             if(index == 0)
                 display_choosen_line(index, file[index].fname);
@@ -245,6 +247,17 @@ void open_file_or_dir(){
     }
 }
 
+int valid_format (FILINFO *file) {
+    if (file -> fattrib & AM_DIR) {
+        return 1;
+    } else if (strstr(file -> fname, "MP3")) {
+        return 1;
+    } else if (strstr(file -> fname, "WAV")) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
 
 void gui_start(void *pvParameters){
     scan_files(0);
