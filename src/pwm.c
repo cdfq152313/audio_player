@@ -13,7 +13,7 @@ uint32_t play_time_other = 0;
 uint32_t play_time_sec = 0;
 
 #define BUF_LENGTH 2304
-#define READBUF_SIZE 1940
+#define READBUF_SIZE 2000
 
 int i;
 
@@ -144,10 +144,11 @@ void TIM1_UP_TIM10_IRQHandler(void)
     if(cur_point == 0)
     {
         if(cur_buf == 1 && ok == 0) {
+            char ch[12];
+            sprintf(ch,"%d",++count);
             LCD_ClearLine( LINE(10) );
-            LCD_DisplayStringLine(LINE(10), "nooooo");
+            LCD_DisplayStringLine(LINE(10), ch);
         }
-        LCD_ClearLine( LINE(10) );
     }
     else if(cur_buf == 0) 
     {
@@ -211,7 +212,7 @@ void TIM1_UP_TIM10_IRQHandler(void)
 
 void decode(uint16_t *outbuf)
 {
-    offset = MP3FindSyncWord(readPtr, bytesLeft);
+    offset = MP3FindSyncWord(readPtr, READBUF_SIZE);
     
     if(offset < 0)
     {
@@ -226,7 +227,7 @@ void decode(uint16_t *outbuf)
         if (bytesLeft < READBUF_SIZE)
         {
             memmove(readBuf,readPtr,bytesLeft);
-            f_read(&fil, readBuf + bytesLeft, sizeof(readBuf) - bytesLeft, &cnt);
+            f_read(&fil, readBuf + bytesLeft, READBUF_SIZE - bytesLeft, &cnt);
             if (cnt < READBUF_SIZE - bytesLeft);
                 memset(readBuf + bytesLeft + cnt, 0, READBUF_SIZE - bytesLeft - cnt);
             bytesLeft=READBUF_SIZE;
@@ -240,7 +241,6 @@ void decode(uint16_t *outbuf)
 
 void TIM2_IRQHandler(void)
 {
-    TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
     if(update_buf == 1)
     {
         if(cur_buf == 0)   
@@ -268,6 +268,7 @@ ok = 1;
         }
         update_buf = 0;
     }
+    TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
 }
 
 void  PWM_TIM2_Configuration(void)
@@ -283,8 +284,8 @@ void  PWM_TIM2_Configuration(void)
     NVIC_Init(&NVIC_InitStructure);
 
   /* Time base configuration */
-    TIM_TimeBaseStructure.TIM_Period = 1199;
-    TIM_TimeBaseStructure.TIM_Prescaler = 399;
+    TIM_TimeBaseStructure.TIM_Period = 1000 - 1;
+    TIM_TimeBaseStructure.TIM_Prescaler = 500-1;
     TIM_TimeBaseStructure.TIM_ClockDivision = 0;
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
 
