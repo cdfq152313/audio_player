@@ -101,25 +101,49 @@ FRESULT scan_files (char* nextdir)
 
     // open directory, if has path
     // if not, use previous dir
-    if(nextdir){
+    if (nextdir) {
         f_closedir(&dir);
-        if(curdir[1])
-            strcat (curdir,"/");
-        strcat (curdir,nextdir);
-        res = f_opendir(&dir, curdir);
+        if (nextdir[0] == '.' && nextdir[1] == '.' && nextdir[2] == 0) {
+            char * pch;
+            pch=strrchr(curdir,'/');
+            if(pch != curdir)
+                *pch = 0;
+            else
+                curdir[1] = 0;
+            res = f_opendir(&dir, curdir);
+        } else {
+            //f_closedir(&dir);
+            if(curdir[1])
+                strcat (curdir,"/");
+            strcat (curdir,nextdir);
+            res = f_opendir(&dir, curdir);
+        } 
     }
+    
 
     uint16_t index = 0;
     curfile = 0;
     LCD_Clear(LCD_COLOR_WHITE);
     // scan file
     if (res == FR_OK) {
+        
         while (index < MAX_LINE) {
+            if (index == 0) {
+                if (curdir[1] != 0) {
+                    file[index].fname[0] = '.';
+                    file[index].fname[1] = '.';
+                    file[index].fname[2] = 0;
+                    file[index].fattrib = AM_DIR;
+                    display_choosen_line(index, file[index].fname);
+                    index++;
+                    continue;
+                }   
+            }
             res = f_readdir(&dir, &file[index]);
             // open error
             if (res != FR_OK) break;
             // current entry
-            if (file[index].fname[0] == '.' && file[index].fname[1] == 0) continue;
+            //if (file[index].fname[0] == '.' && file[index].fname[1] == 0) continue;
             // end directory
             if (file[index].fname[0] == 0){
                 f_closedir(&dir);
@@ -220,6 +244,7 @@ void open_file_or_dir(){
         open_file();
     }
 }
+
 
 void gui_start(void *pvParameters){
     scan_files(0);
