@@ -53,7 +53,7 @@ int play(char * name)
     TIM_Cmd(TIM1, ENABLE);
     TIM_Cmd(TIM2, ENABLE);
     //DAC_Cmd(DAC_Channel_1, ENABLE);
-    DAC_Cmd(DAC_Channel_2, ENABLE);
+    //DAC_Cmd(DAC_Channel_2, ENABLE);
 
     for(int i=0;i<BUF_LENGTH;i++)
     {
@@ -74,7 +74,7 @@ void stop()
     TIM_Cmd(TIM1, DISABLE);
     TIM_Cmd(TIM2, DISABLE);
     //DAC_Cmd(DAC_Channel_1, DISABLE);
-    DAC_Cmd(DAC_Channel_2, DISABLE);
+    //DAC_Cmd(DAC_Channel_2, DISABLE);
 
     play_time_other = 0;
     play_time_sec = 0;
@@ -87,7 +87,8 @@ void stop()
 void player_init(void)
 {
     PWM_RCC_Configuration();
-    DAC_Configuration();
+    //DAC_Configuration();
+    hMP3Decoder = MP3InitDecoder();
     PWM_GPIO_Configuration();
     PWM_TIM2_Configuration();
     PWM_TIM1_Configuration();
@@ -112,6 +113,7 @@ void DAC_Configuration(void)
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN ;
 
     GPIO_Init(GPIOA, &GPIO_InitStructure);
 
@@ -129,13 +131,11 @@ void DAC_Configuration(void)
     //DAC_DualSoftwareTriggerCmd(ENABLE);
     // DAC_SoftwareTriggerCmd(DAC_Channel_1,ENABLE);
     DAC_SoftwareTriggerCmd(DAC_Channel_2,ENABLE);
-
-    hMP3Decoder = MP3InitDecoder();
 }
 
 void  PWM_RCC_Configuration(void)
 {
-    RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOE, ENABLE );//Enalbe AHB for GPIOE
+    RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOB, ENABLE );//Enalbe AHB for GPIOB
     RCC_APB2PeriphClockCmd( RCC_APB2Periph_TIM1, ENABLE );//Enable APB for TIM1
     RCC_APB1PeriphClockCmd( RCC_APB1Periph_TIM2, ENABLE );//Enable APB for TIM2
 }
@@ -145,67 +145,69 @@ void TIM1_UP_TIM10_IRQHandler(void)
 {
     TIM_ClearITPendingBit(TIM1, TIM_FLAG_Update);
 
-    if(cur_point == 0)
-    {
-        if(cur_buf == 1 && ok == 0) {
-            char ch[12];
-            sprintf(ch,"%d",++count);
-            LCD_ClearLine( LINE(10) );
-            LCD_DisplayStringLine(LINE(10), ch);
-        }
-    }
-    else if(cur_buf == 0) 
+    // if(cur_point == 0)
+    // {
+    //     if(cur_buf == 1 && ok == 0) {
+    //         char ch[12];
+    //         sprintf(ch,"%d",++count);
+    //         LCD_ClearLine( LINE(10) );
+    //         LCD_DisplayStringLine(LINE(10), ch);
+    //     }
+    // }
+    if(cur_buf == 0) 
     {
 
-        int data1 = buf[(cur_point/16)*2] >> 4;
-        int data2 = buf[(cur_point/16)*2+1] >> 4;
-        if(cur_point%16 == 0)
-        {
-            // DAC_SetChannel1Data(DAC_Align_12b_R,data1);
-            DAC_SetChannel2Data(DAC_Align_12b_R,data2);
-        } 
-        else 
-        {
+        TIM1->CCR1 = buf[cur_point*2];
+        TIM1->CCR2 = buf[cur_point*2+1];
+
+        // if(cur_point%16 == 0)
+        // {
+        //     // DAC_SetChannel1Data(DAC_Align_12b_R,data1);
+        //     DAC_SetChannel2Data(DAC_Align_12b_R,data2);
+        // } 
+        // else 
+        // {
             
-            if(cur_point%16 == 15 - buf[(cur_point/16)*2+1] % 16)
-            {
-                if(data2 < 4094)
-                {
-                    ++data2;
-                    DAC_SetChannel1Data(DAC_Align_12b_R,data2);
-                }
+        //     if(cur_point%16 == 15 - buf[(cur_point/16)*2+1] % 16)
+        //     {
+        //         if(data2 < 4094)
+        //         {
+        //             ++data2;
+        //             DAC_SetChannel1Data(DAC_Align_12b_R,data2);
+        //         }
                 
-            }
-        }
+        //     }
+        // }
     }
     else
     {
-        
-        int data1 = buf2[(cur_point/16)*2] >> 4;
-        int data2 = buf2[(cur_point/16)*2+1] >> 4;
-        if(cur_point%16 == 0)
-        {
+        TIM1->CCR1 = buf2[cur_point*2];
+        TIM1->CCR2 = buf2[cur_point*2+1];
+
+
+        // if(cur_point%16 == 0)
+        // {
             
-            // DAC_SetChannel1Data(DAC_Align_12b_R,data1);
-            DAC_SetChannel2Data(DAC_Align_12b_R,data2);
-        } 
-        else 
-        {
-            if(cur_point%16 == 15 - buf2[(cur_point/16)*2+1] % 16)
-            {
-                if(data2 < 4094)
-                {
-                    ++data2;
-                    DAC_SetChannel2Data(DAC_Align_12b_R,data2);
-                }
-            }
-        }
+        //     // DAC_SetChannel1Data(DAC_Align_12b_R,data1);
+        //     DAC_SetChannel2Data(DAC_Align_12b_R,data2);
+        // } 
+        // else 
+        // {
+        //     if(cur_point%16 == 15 - buf2[(cur_point/16)*2+1] % 16)
+        //     {
+        //         if(data2 < 4094)
+        //         {
+        //             ++data2;
+        //             DAC_SetChannel2Data(DAC_Align_12b_R,data2);
+        //         }
+        //     }
+        // }
         
     }
 
     ++cur_point;
 
-    if(cur_point == BUF_LENGTH * 8)  {
+    if(cur_point == BUF_LENGTH / 2)  {
         if(cur_buf == 1)ok = 0;
         cur_buf = !cur_buf;
         update_buf = 1;
@@ -239,7 +241,7 @@ void decode(uint16_t *outbuf)
         }
 
         MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
-        if(mp3FrameInfo.outputSamps != 2304)   decode(outbuf);
+        //if(mp3FrameInfo.outputSamps != 2304)   decode(outbuf);
     }
 }
 
@@ -255,7 +257,7 @@ ok = 1;
             int i;
             for(i=0;i<BUF_LENGTH;i++)
             {
-                buf2[i] = ((short)buf2[i])+32768;
+                buf2[i] = ((int)((short)buf2[i])+32768)* 4000 / 65536;
             }
 
 
@@ -268,7 +270,7 @@ ok = 1;
             int i;
             for(i=0;i<BUF_LENGTH;i++)
             {
-                buf[i] = ((short)buf[i])+32768;
+                buf[i] = ((int)((short)buf[i])+32768)* 4000 / 65536;
             }          
         }
         update_buf = 0;
@@ -324,7 +326,7 @@ void  PWM_TIM1_Configuration(void)
     NVIC_Init(&NVIC_InitStructure);
 
   /* Time base configuration */
-    TIM_TimeBaseStructure.TIM_Period = 249;
+    TIM_TimeBaseStructure.TIM_Period = 3999;
     TIM_TimeBaseStructure.TIM_Prescaler = 0;
     TIM_TimeBaseStructure.TIM_ClockDivision = 0;
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
@@ -333,23 +335,24 @@ void  PWM_TIM1_Configuration(void)
     TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
 
   /* PWM1 Mode configuration: Channel1 */
-    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_Timing;
-    //TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-    TIM_OCInitStructure.TIM_Pulse = 0;
-    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
-    //TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
+    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM2;
+    TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Enable;
+
+    TIM_OCInitStructure.TIM_Pulse = 3999;
+    TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_Low;
+    TIM_OCInitStructure.TIM_OCNIdleState = TIM_OCNIdleState_Reset; 
 
     TIM_OC1Init(TIM1, &TIM_OCInitStructure);
-    //TIM_OC2Init(TIM1, &TIM_OCInitStructure);
+    TIM_OC2Init(TIM1, &TIM_OCInitStructure);
 
     TIM_OC1PreloadConfig(TIM1, TIM_OCPreload_Enable);
-    //TIM_OC2PreloadConfig(TIM1, TIM_OCPreload_Enable);
+    TIM_OC2PreloadConfig(TIM1, TIM_OCPreload_Enable);
     TIM_ARRPreloadConfig(TIM1, ENABLE);
 
-    //TIM_ClearFlag(TIM1, TIM_FLAG_Update);
-    //TIM_ClearITPendingBit(TIM1,TIM_IT_Update);
+    TIM_ClearFlag(TIM1, TIM_FLAG_Update);
+    TIM_ClearITPendingBit(TIM1,TIM_IT_Update);
     TIM_ITConfig(TIM1, TIM_IT_Update, ENABLE);
-    //TIM_CtrlPWMOutputs(TIM1, ENABLE);
+    TIM_CtrlPWMOutputs(TIM1, ENABLE);
 
  /* TIM4 enable counter */
     TIM_Cmd(TIM1, DISABLE);
@@ -358,14 +361,13 @@ void  PWM_TIM1_Configuration(void)
 void PWM_GPIO_Configuration(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
-    // GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_11;
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 ;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_0;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP ;
-    GPIO_Init(GPIOE, &GPIO_InitStructure);
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-    //GPIO_PinAFConfig(GPIOE, GPIO_PinSource9, GPIO_AF_TIM1);
-    //GPIO_PinAFConfig(GPIOE, GPIO_PinSource11, GPIO_AF_TIM1);
+    GPIO_PinAFConfig(GPIOB, GPIO_PinSource0, GPIO_AF_TIM1);
+    GPIO_PinAFConfig(GPIOB, GPIO_PinSource13, GPIO_AF_TIM1);
 }
