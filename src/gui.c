@@ -11,6 +11,7 @@
 #include "pwm.h"
 
 #define MAX_LINE 12
+extern uint32_t play_time_sec;
 
 static uint8_t state = 1;
 static uint8_t press_count = 0;
@@ -36,12 +37,7 @@ void prev_touch();
 void next_touch();
 void choose_touch(uint16_t index);
 void LCD_DisplayStringLineWithXPos(uint16_t Line, uint16_t xpos, uint8_t *ptr);
-#define MKCL(n, x, y, h, w) {.name=#n, .fptr=n ## _touch, .Xpos=x, .Ypos=y, .Height=h, .Width=w}
-btnlist bl[]={
-    MKCL(prev, 5,288,30,30),
-    MKCL(choose, 75,288,30,30),
-    MKCL(next, 110,288,30,30)
-};
+
 
 void gui_init(){
     // LCD initialization 
@@ -88,7 +84,37 @@ void display_choosen_line(uint16_t line, char * str){
         display_dir_icon(2, line);
     }
 }
+char *utoa(const char *numbox, unsigned int num, unsigned int base){
+    static char buf[6]={0};
+    int i;
+    int hex_num = sizeof(num) * 2;
+    if(num==0){
+    buf[30]='0';
+    return &buf[30];
+    }
+    for(i=30; i>=0&&hex_num; --hex_num,--i, num/=base)
+    buf[i] = numbox [num % base];
+    return buf+i+1;
+}
+char* time_format(uint32_t sec){
+    static char *numbox = "0123456789";
+    static char time_str[6] = {'0','0',':','0','0',0};
+    time_str[4] = numbox[ sec % 10];
+    sec/=10;
+    time_str[3] = numbox[ sec % 6];
+    sec/=6;
+    time_str[1] = numbox[ sec % 10];
+    sec/=10;
+    time_str[0] = numbox[ sec % 10];
+    return time_str;
+}
 
+void display_time_line(uint16_t line, char * str){
+    LCD_SetBackColor(LCD_COLOR_YELLOW);
+    LCD_SetTextColor(LCD_COLOR_BLACK);
+    LCD_ClearLine( LINE(line) );
+    LCD_DisplayStringLineWithXPos(LINE(line), 100, (uint8_t*)str);
+}
 
 
 void display_normal_line(uint16_t line, char * str){
@@ -237,6 +263,28 @@ void next_touch(){
         //display_choosen_line(curfile, file[curfile].fname);
 }
 
+// void next_song () {
+//     stop();
+//     //display_normal_line(MAX_LINE-1, curdir);
+//     for(; curfile<maxfile; curfile++){
+//         if(curfile == maxfile){
+//             scan_files(0);
+//         }
+//         if(valid_format(file[curfile].fname) ==2)
+//             continue;
+//         if(curdir[1])
+//             strcat(curdir, "/");
+//         strcat(curdir, file[curfile].fname);
+//         if (play(curdir) == -1){
+//             display_normal_line(MAX_LINE, "open file error");
+//         }
+//         else{
+//             display_normal_line(MAX_LINE, "play");
+//         }
+//     }
+
+// }
+
 void set_touch_function(uint16_t Xpos, uint16_t Ypos, uint16_t Height, uint16_t Width, int function)
 {
     LCD_SetTextColor(LCD_COLOR_RED); 
@@ -262,19 +310,15 @@ void open_file(){
         if(curdir[1])
             strcat(curdir, "/");
         strcat(curdir, file[curfile].fname);
-        display_normal_line(MAX_LINE, curdir);
+        //display_normal_line(MAX_LINE, curdir);
         if (play(curdir) == -1){
             display_normal_line(MAX_LINE, "open file error");
-        }
-        else{
-            display_normal_line(MAX_LINE, "play");
         }
         curdir[pathlen] = 0;
     }
     else{
         playing = 0;
         stop();
-        display_normal_line(MAX_LINE, "stop");
     }
 }
 
@@ -306,10 +350,17 @@ int valid_format (FILINFO *file) {
 }
 
 void gui_start(void *pvParameters){
+    static int display_time = 0;
     scan_files(0);
     while(1){
+        display_time ++;
+        if( !(display_time %=10)){
+            char * s;
+            s = time_format(play_time_sec);
+            display_time_line(MAX_LINE, s);
+        }
         TP_State = IOE_TP_GetState();
-        if ((TP_State -> TouchDetected) && (TP_State->Y) >= LINE(0) && (TP_State->Y) < LINE(1)) {
+        /*if ((TP_State -> TouchDetected) && (TP_State->Y) >= LINE(0) && (TP_State->Y) < LINE(1)) {
             choose_touch(0);
         } else if ((TP_State -> TouchDetected) && (TP_State->Y) >= LINE(1) && (TP_State->Y) < LINE(2)) {
             choose_touch(1);
@@ -333,6 +384,12 @@ void gui_start(void *pvParameters){
             choose_touch(10);
         } else if ((TP_State -> TouchDetected) && (TP_State->Y) >= LINE(11) && (TP_State->Y) < LINE(12)) {
             choose_touch(11);
+        }*/
+
+        for (int i = 0; i < maxfile; i++) {
+            if ((TP_State -> TouchDetected) && (TP_State->Y) >= LINE(i) && (TP_State->Y) < LINE(i+1)) {
+                choose_touch(i);
+            } 
         }
 
         switch(state){

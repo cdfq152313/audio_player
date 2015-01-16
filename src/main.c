@@ -42,7 +42,7 @@ int main()
 
     vSemaphoreCreateBinary(play_sem);
     play_queue = xQueueCreate(1, sizeof(FILINFO));
-    if (f_mount(&FatFs, "/", 1) != FR_OK) {
+    while (f_mount(&FatFs, "/", 1) != FR_OK) {
         LCD_DisplayStringLine(LCD_LINE_7,(uint8_t*)"mount error QAQ");
         while(1);
     }
