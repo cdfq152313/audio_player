@@ -26,6 +26,7 @@ uint8_t update_buf = 0;
 uint32_t cur_point = 0;
 
 FIL fil;
+
 static HMP3Decoder hMP3Decoder;
 MP3FrameInfo mp3FrameInfo; 
 volatile u32 bytesLeft = 0; 
@@ -33,6 +34,7 @@ volatile u32 outOfData = 0;
 uint8_t *readPtr = readBuf;
 uint32_t offset;  
 UINT cnt;
+static FRESULT fr;
 int count = 0;
 int ok = 1;
 int ismp3 = 0;
@@ -223,6 +225,7 @@ void decode(uint16_t *outbuf)
     if(offset < 0)
     {
         stop();
+        next_song();
     }
     else
     {
@@ -247,13 +250,21 @@ void decode(uint16_t *outbuf)
 
 void TIM2_IRQHandler(void)
 {
+    
+
     if(update_buf == 1)
     {
         if(cur_buf == 0)   
         {
 ok = 1;
             if(ismp3)decode(buf2);
-            else    f_read(&fil, buf2, BUF_LENGTH*sizeof(uint16_t), &cnt);
+            else    {
+                fr = f_read(&fil, buf2, BUF_LENGTH*sizeof(uint16_t), &cnt);
+                if (fr || cnt == 0){
+                    stop();
+                    next_song();
+                }
+            }
             int i;
             for(i=0;i<BUF_LENGTH;i++)
             {
@@ -265,7 +276,13 @@ ok = 1;
         else
         {
             if(ismp3)decode(buf);
-            else    f_read(&fil, buf, BUF_LENGTH*sizeof(uint16_t), &cnt);
+            else{
+                fr = f_read(&fil, buf, BUF_LENGTH*sizeof(uint16_t), &cnt);
+                if (fr || cnt == 0){
+                    stop();
+                    next_song();
+                }
+            }
             
             int i;
             for(i=0;i<BUF_LENGTH;i++)

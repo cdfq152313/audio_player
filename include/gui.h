@@ -8,6 +8,7 @@
 //void gui_start();
 void gui_start(void *pvParameters);
 void gui_play(void *pvParameters);
+void next_song ();
 void gui_init();
 
 #endif

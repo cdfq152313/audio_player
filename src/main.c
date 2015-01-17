@@ -44,7 +44,6 @@ int main()
     play_queue = xQueueCreate(1, sizeof(FILINFO));
     while (f_mount(&FatFs, "/", 1) != FR_OK) {
         LCD_DisplayStringLine(LCD_LINE_7,(uint8_t*)"mount error QAQ");
-        while(1);
     }
 
     xTaskCreate(gui_start,
