@@ -263,27 +263,7 @@ void next_touch(){
         //display_choosen_line(curfile, file[curfile].fname);
 }
 
-// void next_song () {
-//     stop();
-//     //display_normal_line(MAX_LINE-1, curdir);
-//     for(; curfile<maxfile; curfile++){
-//         if(curfile == maxfile){
-//             scan_files(0);
-//         }
-//         if(valid_format(file[curfile].fname) ==2)
-//             continue;
-//         if(curdir[1])
-//             strcat(curdir, "/");
-//         strcat(curdir, file[curfile].fname);
-//         if (play(curdir) == -1){
-//             display_normal_line(MAX_LINE, "open file error");
-//         }
-//         else{
-//             display_normal_line(MAX_LINE, "play");
-//         }
-//     }
 
-// }
 
 void set_touch_function(uint16_t Xpos, uint16_t Ypos, uint16_t Height, uint16_t Width, int function)
 {
@@ -346,6 +326,27 @@ int valid_format (FILINFO *file) {
         return 1;
     } else {
         return 0;
+    }
+}
+
+void next_song () {
+    stop();
+    //display_normal_line(MAX_LINE-1, curdir);
+    uint8_t prefile = curfile;
+    while(++curfile){
+        if(curfile == maxfile){
+            scan_files(0);
+        }
+        if(valid_format(&file[curfile]) == 2)
+            continue;
+        else{
+            display_normal_line(prefile, file[prefile].fname);
+            display_choosen_line(curfile, file[prefile].fname);
+            prefile = curfile;
+            playing = 0;
+            open_file();
+            return;
+        }
     }
 }
 

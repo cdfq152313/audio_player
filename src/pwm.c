@@ -33,6 +33,7 @@ volatile u32 outOfData = 0;
 uint8_t *readPtr = readBuf;
 uint32_t offset;  
 UINT cnt;
+FRESULT fr;
 int count = 0;
 int ok = 1;
 int ismp3 = 0;
@@ -192,6 +193,7 @@ void decode(uint16_t *outbuf)
     if(offset < 0)
     {
         stop();
+        
     }
     else
     {
@@ -202,11 +204,15 @@ void decode(uint16_t *outbuf)
         if (bytesLeft < READBUF_SIZE)
         {
             memmove(readBuf,readPtr,bytesLeft);
-            f_read(&fil, readBuf + bytesLeft, READBUF_SIZE - bytesLeft, &cnt);
+            fr = f_read(&fil, readBuf + bytesLeft, READBUF_SIZE - bytesLeft, &cnt);
             if (cnt < READBUF_SIZE - bytesLeft);
                 memset(readBuf + bytesLeft + cnt, 0, READBUF_SIZE - bytesLeft - cnt);
             bytesLeft=READBUF_SIZE;
             readPtr=readBuf;               
+            if(fr || cnt == 0){
+                stop();
+                next_song();
+            }
         }
 
         //MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
@@ -222,20 +228,30 @@ void TIM2_IRQHandler(void)
         {
 ok = 1;
             if(ismp3)decode(buf2);
-            else    f_read(&fil, buf2, BUF_LENGTH*sizeof(uint16_t), &cnt);
+            else    {
+                fr = f_read(&fil, buf2, BUF_LENGTH*sizeof(uint16_t), &cnt);
+                if (fr || cnt == 0){
+                    stop();
+                    next_song();
+                }
+            }
             int i;
             for(i=0;i<BUF_LENGTH;i++)
             {
                 buf2[i] = ((int)((short)buf2[i])+32768)* 4000 / 65536;
             }
 
-
         }
         else
         {
             if(ismp3)decode(buf);
-            else    f_read(&fil, buf, BUF_LENGTH*sizeof(uint16_t), &cnt);
-            
+            else { 
+                fr = f_read(&fil, buf, BUF_LENGTH*sizeof(uint16_t), &cnt);
+                if (fr || cnt == 0){
+                    stop();
+                    next_song();
+                }
+            }
             int i;
             for(i=0;i<BUF_LENGTH;i++)
             {
